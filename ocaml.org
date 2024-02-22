@@ -1,0 +1,128 @@
+* 1. Tour of OCaml
+
+Integer
+
+#+BEGIN_SRC ocaml
+50 ;;
+50 * 50 ;;
+#+END_SRC
+
+Float
+
+#+BEGIN_SRC ocaml
+6.28 ;;
+3.14 ;;
+#+END_SRC
+
+String
+
+#+BEGIN_SRC ocaml
+"This is really disco!" ;;
+#+END_SRC
+
+Boolean
+
+#+BEGIN_SRC ocaml
+true ;;
+#+END_SRC
+
+List of integers
+
+#+BEGIN_SRC ocaml
+let u = [1; 2; 3; 4] ;;
+#+END_SRC
+
+List of strings
+
+#+BEGIN_SRC ocaml
+["this"; "is"; "mambo"] ;;
+#+END_SRC
+
+Prepend to List
+
+#+BEGIN_SRC ocaml
+5 :: u ;;
+#+END_SRC
+
+If else construct
+
+#+BEGIN_SRC ocaml
+2 * if "hello" = "world" then 3 else 5 ;;
+#+END_SRC
+
+Let binding
+
+#+BEGIN_SRC ocaml
+let x = 50 ;;
+#+END_SRC
+
+Let scope
+
+#+BEGIN_SRC ocaml
+let y = 50 in y * y ;;
+y ;;
+#+END_SRC
+
+Let in expression
+
+#+BEGIN_SRC ocaml
+let a = 1 in
+let b = 2 in
+  a + b ;;
+#+END_SRC
+
+Functions
+
+#+BEGIN_SRC ocaml
+let square x = x * x ;;
+
+square 50 ;;
+
+square ;;
+#+END_SRC
+
+Anonymous Functions
+
+#+BEGIN_SRC ocaml
+fun x -> x * x ;;
+#+END_SRC
+
+Partial Function Application
+
+#+BEGIN_SRC ocaml
+let cat a b = a ^ " " ^ b ;;
+
+cat "ha" "ha" ;;
+
+let cat_hi = cat "hi" ;;
+
+cat_hi "friend" ;;
+#+END_SRC
+
+Higher order functions
+
+#+BEGIN_SRC ocaml
+List.map ;;
+
+List.map (fun x -> x * x) ;;
+
+List.map (fun x -> x * x) [0; 1; 2] ;;
+#+END_SRC
+
+Side Effects
+
+#+BEGIN_SRC ocaml
+print_endline ;;
+
+print_endline "Hello" ;;
+#+END_SRC
+
+Recursive Functions
+
+#+BEGIN_SRC ocaml
+let rec range lo hi =
+  if lo > hi then []
+  else lo :: range (lo + 1) hi ;;
+
+range 2 5 ;;
+#+END_SRC
