@@ -126,3 +126,266 @@ let rec range lo hi =
 
 range 2 5 ;;
 #+END_SRC
+
+* 2. Tour of OCaml (...)
+
+Type Conversion and Type-Inference
+
+#+BEGIN_SRC ocaml
+2.0 +. 2.0 ;;
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+1 + 2.5 ;;
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+1 +. 2.5 ;;
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+float_of_int 1 *. 2.5 ;;
+#+END_SRC
+
+Lists
+
+#+BEGIN_SRC ocaml
+[] ;;
+
+[1; 2; 3] ;;
+
+[false; false; true] ;;
+
+[[1;2]; [3]; [4;5;6]] ;;
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+1 :: [2; 3; 4] ;;
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+let rec sum u =
+  match u with
+  | [] -> 0
+  | x :: v -> x + sum v ;;
+
+sum [1; 4; 3; 2; 5] ;;
+#+END_SRC
+
+Polymorphic Functions on Lists
+
+#+BEGIN_SRC ocaml
+let rec length u =
+  match u with
+  | [] -> 0
+  | _ :: v -> 1 + length v ;;
+
+length [1; 2; 3; 4] ;;
+
+length ["cow"; "sheep"; "cat"] ;;
+
+length [[]] ;;
+#+END_SRC
+
+Higher-Order Function
+
+#+BEGIN_SRC ocaml
+let square x = x * x ;;
+
+let rec map f u =
+  match u with
+  | [] -> []
+  | x :: u -> f x :: map f u ;;
+
+map square [1; 2; 3; 4] ;;
+#+END_SRC
+
+Pattern Matching (...)
+
+#+BEGIN_SRC ocaml
+#show option ;;
+
+let f opt = match opt with
+  | None -> None
+  | Some None -> None
+  | Some (Some x) -> Some x ;;
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+let g x =
+  if x = "foo" then 1
+  else if x = "bar" then 2
+  else if x = "baz" then 3
+  else if x = "qux" then 4
+  else 0 ;;
+
+let g' x = match x with
+  | "foo" -> 1
+  | "bar" -> 2
+  | "baz" -> 3
+  | "qux" -> 4
+  | _ -> 0 ;;
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+fun i -> match i with 0 -> 1 ;;
+#+END_SRC
+
+Pairs and Tuples
+
+#+BEGIN_SRC ocaml
+(1, "one", 'k') ;;
+
+([], false) ;;
+
+let snd p =
+  match p with
+  | (_, y) -> y ;;
+
+snd (42, "apple") ;;
+#+end_src
+
+Enumerated Data Type
+
+#+begin_src ocaml
+type primary_colour = Red | Green | Blue ;;
+
+[Red; Blue; Red] ;;
+#+end_src
+
+Union Data Type
+
+#+BEGIN_SRC ocaml
+type http_response =
+  | Data of string
+  | Error_code of int ;;
+
+Data "<!DOCTYPE html>
+<html lang=\"en\">
+  <head>
+    <meta charset=\"utf-8\">
+    <title>Dummy</title>
+  </head>
+  <body>
+    Dummy Page
+  </body>
+</html>";;
+
+Error_code 404;;
+#+END_SRC
+
+Pattern matching on Variants
+
+#+BEGIN_SRC ocaml
+ type page_range =
+    | All
+    | Current
+    | Range of int * int;;
+
+let colour_to_rgb colour =
+  match colour with
+  | Red   -> (0xff,    0,    0)
+  | Green -> (0,    0xff,    0)
+  | Blue  -> (0,       0, 0xff) ;;
+
+let http_status_code response = 
+  match response with
+  | Data _ -> 200
+  | Error_code code -> code ;;
+
+let is_printable page_count cur range =
+  match range with 
+  | All -> true 
+  | Current -> 0 <= cur && cur < page_count
+  | Range (lo, hi) -> 0 <= lo && lo <= hi && hi < page_count ;;
+#+END_SRC
+
+Records
+
+#+BEGIN_SRC ocaml
+type person = {
+  first_name : string;
+  surname : string ;
+  age : int
+} ;;
+
+let gerard = {
+  first_name = "Gerard" ;
+  surname = "Huet" ;
+  age = 76
+} ;;
+
+let s = gerard.surname ;;
+
+let is_teenager person =
+  match person with
+  | { age = x; _ } -> 13 <= x && x <= 19 ;;
+
+is_teenager gerard ;;
+#+END_SRC
+
+Exceptions
+
+#+BEGIN_SRC ocaml
+10 / 0 ;;
+
+let id_42 n = if n <> 42 then raise (Failure "Sorry") else n ;;
+
+id_42 42;;
+
+id_42 5;;
+
+try id_42 0 with Failure _ -> 0 ;;
+#+END_SRC
+
+Using Result Type
+
+#+BEGIN_SRC ocaml
+#show result ;;
+
+let id_42_res n = if n <> 42 then Error "Sorry" else Ok n ;;
+
+id_42_res 42 ;;
+
+id_42_res 35 ;;
+
+match id_42_res 0 with
+  | Ok n -> n
+  | Error _ -> 0 ;;
+#+END_SRC
+
+Working with Mutable State
+
+#+BEGIN_SRC ocaml
+let r = ref 0 ;;
+
+!r ;;
+
+r := 42 ;;
+
+!r ;;
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+let text = ref "hello " ;;
+
+print_string !text; text := "world!"; print_endline !text ;;
+#+END_SRC
+
+Modules and the Standard Library
+
+#+BEGIN_SRC ocaml
+#show Option ;;
+
+Option.map ;;
+
+Option.map (fun x -> x * x) ;;
+
+Option.map (fun x -> x * x) None ;;
+
+Option.map (fun x -> x * x) (Some 8) ;;
+
+List.map ;;
+
+List.map (fun x -> x * x );;
+#+END_SRC
