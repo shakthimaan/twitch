@@ -1,5 +1,7 @@
 * 1. Tour of OCaml
 
+Reference: https://ocaml.org/docs/tour-of-ocaml
+
 Integer
 
 #+BEGIN_SRC ocaml
@@ -128,6 +130,8 @@ range 2 5 ;;
 #+END_SRC
 
 * 2. Tour of OCaml (...)
+
+Reference: https://ocaml.org/docs/tour-of-ocaml
 
 Type Conversion and Type-Inference
 
@@ -389,3 +393,168 @@ List.map ;;
 
 List.map (fun x -> x * x );;
 #+END_SRC
+
+* 3. Values and Functiosn
+
+Reference: https://ocaml.org/docs/values-and-functions
+
+What is a a Value?
+
+#+BEGIN_SRC ocaml
+2 * 21 ;;
+
+int_of_float ;; 
+
+int_of_float (3.14159 *. 2.0) ;;
+
+fun x -> x * x ;;
+
+print_endline ;;
+
+print_endline "Hello!" ;;
+#+END_SRC
+
+Global Definitions
+
+#+BEGIN_SRC ocaml
+let the_answer = 2 * 3 * 7 ;;
+#+END_SRC
+
+Local Definitions
+
+#+BEGIN_SRC ocaml
+let d = 2 * 3 in d * 7 ;;
+
+d ;;
+
+let d = 2 * 3 in
+let e = d * 7 in
+d * e ;;
+
+d ;;
+
+e ;;
+
+let d =
+  let e = 2 * 3 in
+  e * 5 in
+d * 7 ;;
+
+d ;;
+
+e ;;
+#+END_SRC
+
+Pattern Matching on Tuples
+
+#+BEGIN_SRC ocaml
+List.split ;;
+
+let (x, y) = List.split [(1, 2); (3, 4); (5, 6); (7, 8)] ;;
+#+END_SRC
+
+Pattern Matching on Records
+
+#+BEGIN_SRC ocaml
+type name  = { first : string; last : string } ;;
+
+let robin = { first = "Robin"; last = "Milner" } ;;
+
+let { first; last } = robin ;;
+#+END_SRC
+
+Pattern Matching on Unit
+
+#+BEGIN_SRC ocaml
+let () = print_endline "ha ha" ;;
+#+END_SRC
+
+Pattern Matching on User-Defined Types
+
+#+BEGIN_SRC ocaml
+type live_person = int * name ;;
+
+let age ((years, { first; last }) : live_person) = years ;;
+#+END_SRC
+
+Discarding Values using Pattern Matching
+
+#+BEGIN_SRC ocaml
+let (_, y) = List.split [(1, 2); (3, 4); (5, 6); (7, 8)] ;;
+#+END_SRC
+
+Scopes and Envirnoments
+
+#+BEGIN_SRC ocaml
+let twenty = 20 ;;
+
+let ten = 10 in 2 * ten ;;
+
+ten ;;
+
+(1.0 +. sqrt 5.0) /. 2.0 ;;
+
+let _ = (1.0 +. sqrt 5.0) /. 2.0 ;;
+#+END_SRC
+
+Inner Shadowing
+
+#+BEGIN_SRC ocaml
+let i = 21 ;;
+
+let i = 7 in i * 2 ;;
+
+i ;;
+#+END_SRC
+
+Same-Level Shadowing
+
+#+BEGIN_SRC ocaml
+let h = 2 * 3 ;;
+
+let e = h * 7 ;;
+
+let h = 7 ;;
+
+e ;;
+#+END_SRC
+
+Applying Functions
+
+#+BEGIN_SRC ocaml
+max (21 * 2) (int_of_string "713") ;;
+
+String.starts_with ~prefix:"state" "stateless" ;;
+#+END_SRC
+
+Application Operator
+
+#+BEGIN_SRC ocaml
+sqrt 9.0 ;; 
+
+sqrt @@ 9.0 ;;
+#+END_SRC
+
+Pipe Operator
+
+#+BEGIN_SRC ocaml
+"81" |> int_of_string 
+     |> float_of_int
+     |> sqrt 
+     |> int_of_float ;;
+#+END_SRC
+
+Anonymous Functios
+
+#+BEGIN_SRC ocaml
+fun x -> x ;;
+
+fun x -> x * x ;;
+
+fun s t -> s ^ " " ^ t ;;
+
+function [] -> None | x :: _ -> Some x ;;
+
+List.map (fun x -> x * x) [1; 2; 3; 4] ;;
+#+END_SRC
+
