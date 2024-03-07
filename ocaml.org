@@ -558,3 +558,128 @@ function [] -> None | x :: _ -> Some x ;;
 List.map (fun x -> x * x) [1; 2; 3; 4] ;;
 #+END_SRC
 
+Defining Global Functions
+
+#+BEGIN_SRC ocaml
+let f = fun x -> x * x ;;
+
+let g x = x * x ;;
+#+END_SRC
+
+Defining Local Functions
+
+#+BEGIN_SRC ocaml
+let sq x = x * x in sq 7 * sq 7 ;;
+
+sq ;;
+#+END_SRC
+
+Closures
+
+#+BEGIN_SRC ocaml
+let j = 2 * 3;;
+
+let k x = x * j ;;
+
+k 7 ;;
+
+let j = 7 ;;
+
+k 7 ;;
+
+let m = j * 3 ;;
+
+let max_42 = max 42 ;;
+#+END_SRC
+
+Recursive Functions
+
+#+BEGIN_SRC ocaml
+let rec fibo n =
+  if n <= 1 then n else fibo (n - 1) + fibo (n - 2 ) ;;
+
+let u = List.init 10 Fun.id ;;
+
+List.map fibo u ;;
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+let rec fib_loop m n i =
+  if i = 0 then m else fib_loop n (n + m) (i -1) ;;
+
+let fib = fib_loop 0 1 ;;
+
+List.init 10 Fun.id |> List.map fib ;;
+#+END_SRC
+
+Defining Functions with Multiple Parameters
+
+#+BEGIN_SRC ocaml
+let sweet_cat x y = x ^ " " ^ y ;;
+
+sweet_cat "kitty" "cat" ;;
+#+END_SRC
+
+Anonymous Functions with Multiple Parameters
+
+#+BEGIN_SRC ocaml
+let sour_cat = fun x -> fun y -> x ^ " " ^ y ;;
+
+sour_cat "kitty" "cat" ;;
+#+END_SRC
+
+Partial Application and Closures
+
+#+BEGIN_SRC ocaml
+let sour_kitty x = sour_cat "kitty" x ;;
+
+let sweet_kitty = fun x -> sweet_cat "kitty" x ;;
+
+sour_kitty "cat" ;;
+
+sweet_kitty "cat" ;;
+#+END_SRC
+
+Types of Functions of Multiple Parameters
+
+#+BEGIN_SRC ocaml
+let dummy_cat : string -> (string -> string) = sweet_cat ;;
+
+let bogus_cat : (string -> string) -> string = sweet_cat ;;
+#+END_SRC
+
+Tuples as Function Parameters 
+
+#+BEGIN_SRC ocaml
+("felix", 1920) ;;
+
+let spicy_cat (x, y) = x ^ " " ^ y ;;
+
+spicy_cat ("hello", "world") ;;
+#+END_SRC
+
+Currying and Uncurrying
+
+#+BEGIN_SRC ocaml
+let uncurried_cat (x, y) = sweet_cat x y ;;
+
+let curried_cat x y = uncurried_cat (x, y) ;;
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+string_of_int ;;
+
+print_endline ;;
+#+END_SRC
+
+What makes Functions different from other Values
+
+#+BEGIN_SRC ocaml
+sqrt ;;
+
+pred ;;
+
+succ ;;
+
+pred = succ ;;
+#+END_SRC
