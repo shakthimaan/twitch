@@ -544,7 +544,7 @@ Pipe Operator
      |> int_of_float ;;
 #+END_SRC
 
-Anonymous Functios
+Anonymous Functions
 
 #+BEGIN_SRC ocaml
 fun x -> x ;;
