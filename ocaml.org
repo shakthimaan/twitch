@@ -683,3 +683,178 @@ succ ;;
 
 pred = succ ;;
 #+END_SRC
+
+* Basic Data Types and Pattern Matching
+
+Integers
+
+#+BEGIN_SRC ocaml
+42 ;;
+#+END_SRC
+
+Floats
+
+#+BEGIN_SRC ocaml
+let pi = 3.14159 ;;
+
+let tau = 2.0 *. pi ;;
+
+let tau 2 *. pi ;;
+
+let tau = 2 8 pi ;;
+#+END_SRC
+
+Boolean
+
+#+BEGIN_SRC ocaml
+true ;;
+
+false ;;
+
+false < true ;;
+
+3 * if "foo" = "bar" then 5 else 5 + 2 ;;
+
+3 * match "foo" = "bar" with true -> 5 | false -> 5 + 2 ;;
+#+END_SRC
+
+Characters
+
+#+BEGIN_SRC ocaml
+'d' ;;  
+#+END_SRC
+
+Strings
+
+#+BEGIN_SRC ocaml
+"hello" ^ " " ^ "world!" ;;
+
+"buenos dias".[4] ;;
+#+END_SRC
+
+Byte Sequences
+
+#+BEGIN_SRC ocaml
+String.to_bytes "hello" ;;
+#+END_SRC
+
+Arrays
+
+#+BEGIN_SRC ocaml
+[| 0; 1; 2; 3; 4; 5 |] ;;
+
+[| 'x'; 'y'; 'z' |] ;;
+
+[| "foo"; "bar"; "baz" |] ;;
+
+[||] ;;
+
+[| 'x'; 'y'; 'z' |].(2) ;;
+
+let letter = [| 'v'; 'x'; 'y'; 'z'|] ;; 
+
+letter.(2) <- 'F' ;;
+
+letter ;;  
+#+END_SRC
+
+Lists
+
+#+BEGIN_SRC ocaml
+[0; 1; 2; 3; 4; 5 ] ;;
+
+[ 'x'; 'y'; 'z'] ;;
+
+[ "foo"; "bar"; "baz"] ;;
+
+3 :: [] ;;
+
+2 :: 3 :: [] ;;
+
+1 :: 2 :: 3 :: [] ;;
+
+match [1; 2; 3] with
+  | x :: u -> x
+  | [] -> raise Exit ;;
+
+match [1; 2; 3] with
+  | x :: y :: u -> y
+  | x :: u -> x
+  | [] -> raise Exit ;;  
+#+END_SRC
+
+Options
+
+#+BEGIN_SRC ocaml
+None ;;
+
+Some 42 ;;
+
+Some "hello" ;;
+
+match Some 42 with None -> raise Exit | Some x -> x ;;
+#+END_SRC
+
+Results
+
+#+BEGIN_SRC ocaml
+Ok 42 ;;
+
+Error "Sorry" ;;
+#+END_SRC
+
+Tuples
+
+#+BEGIN_SRC ocaml
+(3, 'K') ;;
+
+fst (3, 'g') ;;
+
+snd (3, 'g') ;;
+
+let f x = match x with (h, i, j, k) -> j ;;
+
+f (42, 'h', true, 2.0) ;;
+#+END_SRC
+
+Functions
+
+#+BEGIN_SRC ocaml
+fun x -> x * x ;;
+
+fun x -> x * x ;;
+
+(fun x -> x * x) 9 ;;
+
+fun x -> x ;;
+
+(fun x -> x) 42 ;;
+
+(fun x -> x) "This is really disco!" ;;
+
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+let f = fun x -> x * x ;;
+
+f 9 ;;
+
+let g x = x * x ;;
+
+g 9 ;;
+
+raise ;; 
+
+fun s r -> s ^ " " ^ r ;;
+
+let mean s r = (s + r) / 2 ;;
+#+END_SRC
+
+Unit
+
+#+BEGIN_SRC ocaml
+read_line ;;
+
+print_endline ;;
+#+END_SRC
+
