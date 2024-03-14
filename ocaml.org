@@ -129,10 +129,6 @@ let rec range lo hi =
 range 2 5 ;;
 #+END_SRC
 
-* 2. Tour of OCaml (...)
-
-Reference: https://ocaml.org/docs/tour-of-ocaml
-
 Type Conversion and Type-Inference
 
 #+BEGIN_SRC ocaml
@@ -394,7 +390,7 @@ List.map ;;
 List.map (fun x -> x * x );;
 #+END_SRC
 
-* 3. Values and Functiosn
+* 2. Values and Functions
 
 Reference: https://ocaml.org/docs/values-and-functions
 
@@ -684,7 +680,7 @@ succ ;;
 pred = succ ;;
 #+END_SRC
 
-* Basic Data Types and Pattern Matching
+* 3. Basic Data Types and Pattern Matching
 
 Integers
 
@@ -858,3 +854,303 @@ read_line ;;
 print_endline ;;
 #+END_SRC
 
+User-Defined Types
+
+Use the "type" keyword for defining either:
+
+1. Variant
+2. Record
+3. Aliases
+
+Enumerated Data Types
+
+#+BEGIN_SRC ocaml
+type character_class =
+  | Barbarian
+  | Bard
+  | Cleric
+  | Fighter
+  | Monk
+  | Paladin
+  | Ranger
+  | Rogue
+  | Sorcerer
+  | Wizard ;;
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+type rectitude = Evil | R_Neutral | Good ;;
+
+type firmness = Chaotic | F_Neutral | Lawful ;;
+
+let rectitude_to_french = function
+  | Evil -> "Mauvais"
+  | R_Neutral -> "Neutre"
+  | Good -> "Bon" ;;
+#+END_SRC
+
+Represent weekdays and you can do ordering on the values:
+
+#+BEGIN_SRC ocaml
+type weekday =
+  | Monday
+  | Tuesday
+  | Wednesday
+  | Thursday
+  | Friday ;;
+
+type weekend =
+  | Saturday
+  | Sunday ;;
+
+Monday < Tuesday ;;
+
+Thursday < Wednesday ;;
+#+END_SRC
+
+Constructors with Data
+
+#+BEGIN_SRC ocaml
+type commit =
+  | Hash of string
+  | Tag of string
+  | Branch of string
+  | Head
+  | Fetch_head
+  | Orig_head
+  | Merge_head ;;
+
+Hash "991f6710bad011868d46edb5d609ce251d1d1854";;
+#+END_SRC
+
+Using pattern matching to convert a commit to a string:
+
+#+BEGIN_SRC ocaml
+let commit_to_string = function
+  | Hash sha -> sha
+  | Tag name -> name
+  | Branch name -> name
+  | Head -> "HEAD"
+  | Fetch_head -> "FETCH_HEAD"
+  | Orig_head -> "ORIG_HEAD"
+  | Merge_head -> "MERGE_HEAD" ;;
+
+let commit_to_string' x = match x with
+  | Hash sha -> sha
+  | Tag name -> name
+  | Branch name -> name
+  | Head -> "HEAD"
+  | Fetch_head -> "FETCH_HEAD"
+  | Orig_head -> "ORIG_HEAD"
+  | Merge_head -> "MERGE_HEAD" ;;
+
+commit_to_string' (Hash "991f6710bad011868d46edb5d609ce251d1d1854");;
+#+END_SRC
+
+Wrapping product types with parenthesis makes them a single parameter:
+
+#+BEGIN_SRC ocaml
+type t =
+  | C1 of int * bool
+  | C2 of (int * bool) ;;
+
+let p = (4, false) ;;
+
+C1 p ;;
+
+C2 p ;;
+#+END_SRC
+
+C1 has two parameters (int and bool).
+C2 has one parameter of type int * bool.
+
+Recursive Variants
+
+A definition referring to itself is recursive.
+
+#+BEGIN_SRC ocaml
+type json =
+  | Null
+  | Bool of bool
+  | Int of int
+  | Float of float
+  | String of string
+  | Array of json list
+  | Object of (string * json) list ;;
+#+END_SRC
+
+Both Array and Object contain values of json.
+
+Functions with pattern matching on recursive variants are often
+recursive functions.
+
+#+BEGIN_SRC ocaml
+let rec has_field name = function
+  | Array u ->
+    List.fold_left (fun b obj -> b || has_field name obj) false u
+  | Object u ->
+      List.fold_left (fun b (key, obj) -> b || key = name || has_field name obj) false u
+  | _ -> false ;;
+#+END_SRC
+
+Polymorphic Data Types
+
+The Some constructor of option is polymorphic as it can be Some 42 or
+Some "hola".
+
+#+BEGIN_SRC ocaml
+#show option ;;
+
+#show list ;;
+#+END_SRC
+
+bool and unit are regular variants:
+
+#+BEGIN_SRC ocaml
+#show unit ;;
+
+#show bool;;
+#+END_SRC
+
+Product types also behave as variant types:
+
+#+BEGIN_SRC ocaml
+type ('a, 'b) pair = Pair of 'a * 'b ;;
+
+Pair (42, true) ;;
+#+END_SRC
+
+User-Defined Polymorphic
+
+A binary tree:
+
+#+BEGIN_SRC ocaml
+type 'a tree =
+  | Leaf
+  | Node of 'a * 'a tree * 'a tree ;;
+
+     1
+   /   \
+  2     3
+
+Node (1, Node(2, Leaf, Leaf), Node(3, Leaf, Leaf)) ;;
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+let rec sum = function
+  | Leaf -> 0
+  | Node (x, left, right) -> x + sum left + sum right ;;
+
+sum (Node (1, Node(2, Leaf, Leaf), Node(3, Leaf, Leaf))) ;;
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+let rec map f = function
+  | Leaf -> Leaf
+  | Node (x, left, right) -> Node (f x, map f left, map f right) ;;
+
+map (fun x -> x * x) (Node (1, Node (2, Leaf, Leaf), Node (3, Leaf, Leaf))) ;;
+#+END_SRC
+
+Records
+
+#+BEGIN_SRC ocaml
+type character = {
+  name : string;
+  level : int;
+  race : string;
+  class_type : character_class ;
+  alignment : firmness * rectitude ;
+  armor_class : int ;
+} ;;
+
+let ghorghor_bey = {
+  name = "Ghorghor Bey" ;
+  level = 17 ;
+  race = "half-ogre" ;
+  class_type = Fighter;
+  alignment = (Chaotic, R_Neutral);
+  armor_class = -8 ;
+} ;;
+
+ghorghor_bey.alignment ;;
+
+ghorghor_bey.class_type ;;
+
+ghorghor_bey.level ;;
+#+END_SRC
+
+To create new record with some values changed:
+
+#+BEGIN_SRC ocaml
+let togrev = { ghorghor_bey with name = "Togrev"; level = 20; armor_class = -6 } ;;
+#+END_SRC
+
+Pattern match on records:
+
+#+BEGIN_SRC ocaml
+match ghorghor_bey with { level; _ } -> level ;;
+#+END_SRC
+
+Type Aliases
+
+Any type can be given a name:
+
+#+BEGIN_SRC ocaml
+type latitude_longitude = float * float ;;
+#+END_SRC
+
+A complete example: Mathematical Expressions
+
+To symbolically output:
+n * (x + y) = n * x + n * y.
+
+#+BEGIN_SRC ocaml
+type expr =
+  | Plus of expr * expr
+  | Minus of expr * expr
+  | Times of expr * expr
+  | Divide of expr * expr
+  | Var of string ;;
+
+let e = Times (Var "n", Plus (Var "x", Var "y")) ;;
+
+let rec to_string = function
+  | Plus (e1, e2) -> "(" ^ to_string e1 ^ " + " ^ to_string e2 ^ ")"
+  | Minus (e1, e2) -> "(" ^ to_string e1 ^ " - " ^ to_string e2 ^ ")"
+  | Times (e1, e2) -> "(" ^ to_string e1 ^ " * " ^ to_string e2 ^ ")"
+  | Divide (e1, e2) -> "(" ^ to_string e1 ^ " / " ^ to_string e2 ^ ")"
+  | Var v -> v ;;
+
+let rec distrib = function
+  | Times (e1, Plus (e2, e3)) ->
+    Plus (Times (distrib e1, distrib e2),
+          Times (distrib e1, distrib e3))
+  | Times (Plus (e1, e2), e3) ->
+    Plus (Times (distrib e1, distrib e3),
+          Times (distrib e2, distrib e3))
+  | Plus (e1, e2) -> Plus (distrib e1, distrib e2)
+  | Minus (e1, e2) -> Minus (distrib e1, distrib e2)
+  | Times (e1, e2) -> Times (distrib e1, distrib e2)
+  | Divide (e1, e2) -> Divide (distrib e1, distrib e2)
+  | Var v -> Var v;;
+
+e |> distrib |> to_string |> print_endline ;;
+#+END_SRC
+
+The reverse operation of factoring out the common subexpressions:
+
+n * x + n * y = n * (x + y).
+
+#+BEGIN_SRC ocaml
+
+let top_factorise = function
+  | Plus (Times (e1, e2), Times (e3, e4)) when e1 = e3 ->
+      Times (e1, Plus (e2, e4))
+  | Plus (Times (e1, e2), Times (e3, e4)) when e2 = e4 ->
+      Times (Plus (e1, e3), e4)
+  | e -> e ;;
+
+top_factorise (Plus (Times (Var "n", Var "x"),
+                     Times (Var "n", Var "y"))) ;;
+#+END_SRC
