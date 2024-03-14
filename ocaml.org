@@ -682,6 +682,8 @@ pred = succ ;;
 
 * 3. Basic Data Types and Pattern Matching
 
+Reference: https://ocaml.org/docs/basic-data-types
+
 Integers
 
 #+BEGIN_SRC ocaml
