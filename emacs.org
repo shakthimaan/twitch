@@ -1,0 +1,236 @@
+* The Emacs Editor
+
+Emacs is an advanced, extensible, customizable, self-documenting editor.
+
+The home page is https://www.gnu.org/software/emacs/
+
+To extend Emacs, refer the Emacs Lisp Reference Manual.
+
+Copyright (c) 1985-1987, 1993-2021 Free Software Foundation.
+
+Released under the GNU General Public License and GNU Free Documentation License.
+
+* Distribution
+
+The source code is available, and you are free to use the same.
+
+It is still protected by copyright and the GNU General Public License.
+
+* The Organization of the Screen
+
+** Introduction
+
+Use GNU Emacs on the X Window System or the terminal.
+
+It normally starts with only one frame.
+
+Menu bar at the top.
+
+Below the menu bar is the tool bar.
+
+At the very bottom is the echo area.
+
+The main area is called the window. Each window has a buffer.
+
+The window can have a scroll bar on one side.
+
+The last line of the window is the mode line.
+
+You can have multiple windows and frames.
+
+At any time, only one window is selected, and this has the cursor. It
+is called the current buffer.
+
+** Point
+
+The cursor in the selected window is called the point.
+
+It is a solid block, and is between two characters.
+
+For a text "frob", and cursor on "b", it means it is between 'o' and 'b'.
+
+Inserting '!' gives "fro!b", and the cursor remains on 'b'.
+
+Each buffer has its own value of point, and the display remembers the same.
+
+** The Echo Area
+
+The characters of commands are echoed.
+
+It may also prompt you for completion.
+
+Error messages can also be displayed.
+
+Informative messages can also be displayed.
+
+For example, "C-x =" echoes the character value.
+
+Informative echo area messages are also saved in athe *Messages* buffer.
+
+If you miss a message, you can check the *Messages* buffer.
+
+Var: "message-log-max" specifies the *Messages* buffer line number limit.
+
+The echo area is also used to display the minibuffer to input arguments to commands.
+
+The prompt string appears in the minibuffer temporarily.
+
+You can get out of the minibuffer by using C-g.
+
+** The Mode Line
+
+The Mode Line format:
+
+  cs:ch-fr buf pos line (major minor)
+
+cs = Coding System
+- No special character set handling
+= Files containing non-textual data
+1 ISO Latin-1
+
+cs is followed by:
+':' Text separated by newline characters in a file
+'\' MS-DOS convention that uses a carriage return instead of a newline
+'/' or '(Mac)' for older Macintosh systems
+'(Unix)' on some systems
+
+Frames with emacsclient have '@' to indicate Emacs process running as a daemon.
+
+The ch shows two dashes:
+'--' if the buffer is unmodified
+'**' if the buffer is modified
+'%*' for a read-only buffer
+
+The character after ch is a '-'.
+For a remote machine, '@' is displayed.
+
+fr gives the selected frame name.
+
+buf is the name of the buffer.
+
+pos tells if there is additional text above or below.
+
+If buffer is small, pos is 'All'.
+If you are at the beginning, pos is 'Top'.
+If you are at the end of the buffer, pos is 'Bot'.
+Or it is 'nn%' where nn is the percentage of the buffer above the top of the window.
+
+line is the character 'L' followed by the number of at point.
+
+After enabling Column Number mode, you can display the current column number too.
+
+major is the major mode used in the buffer, which is the principal editing mode in the buffer.
+Examples: Text mode, Lisp mode, C mode etc.
+
+Some additional information may be displayed after the major made.
+Examples: Compilation buffer, shell buffer etc.
+
+minor is the list of minor modes, which are optional editing modes.
+
+Narrow means editing is restricted to a portion of the text.
+
+'Def' means a keyboard macro is currently being defined.
+
+In a recursive editing level, square brackets ('[...]') appear around
+the parenthesis surrounding the mode.
+
+The mode line is mouse-sensitive, and shows tooltips.
+
+** The Menu Bar
+
+Use the mouse to choose a command from the menu bar.
+
+Select the first menu bar by pressing F10.
+
+To select press RET and to cancel press G-g.
+
+** Kinds of User Input
+
+Primarily designed for use with the keyboard.
+
+Commonly used modifier keys are Control and Meta.
+
+Control-a is entered by holding Ctrl key while pressing 'a'.
+
+Similarly, Meta-a.
+
+You can enter M-a by typing Esc a.
+
+ESC is entered as a special character. You don't hold down ESC while typing the next character.
+
+C-M-a is by holding  Ctrl and Alt and pressing 'a'.
+
+Note: On graphical displays, window managers may block some keyboard
+inputs, M-TAB, M-SPC, C-M-d and C-M-l.
+
+So, customize window manager or rebind the keys.
+
+Mouse clicks are referred to as input events.
+
+* Keys
+
+C-f move forward one character.
+
+Some commands take more input events:
+
+C-x C-f
+
+A key sequence or key is a sequence of one or more input events that is meaningful as a unit.
+
+If a key sequence is not long enough to invoke a command, it is a prefix key.
+Example: C-x
+
+There is no limit to the length of the key sequences.
+
+Keep it short to three or four input events.
+
+You cannot add input events to a complete key, like C-f.
+
+Default prefix keys:
+C-c
+C-h
+C-x
+C-x RET
+C-x a
+C-x n
+C-x r
+C-x t
+C-x v
+C-x 4
+C-x 5
+C-x 6
+ESC
+M-g
+M-o
+
+F1 and F2 are aliases for C-h and C-x 6.
+
+You can customize, but, is generally not recommended.
+
+C-h or F1 after a prefix key displays the list of commands for the prefix.
+
+* Keys and Commands
+
+Emacs assigns meanings to named commands.
+
+Emacs gives keys their meanings by binding them to commands.
+
+Examples: next-line, forward-word etc.
+
+Internally, each command is a Lisp function.
+
+The actions associated with the command are performed by running the function.
+
+The bindings between keys and commands are recorded in tables called keymaps.
+
+Example: C-n (key) is bound to next-line.
+
+We say, "The command C-n (next-line) moves point vertically down".
+
+A variable is a name used to store a value. It is useful for customisation.
+
+* Entering Emacs
+
+* Exiting Emacs
+
+
