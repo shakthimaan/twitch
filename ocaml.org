@@ -1156,3 +1156,403 @@ let top_factorise = function
 top_factorise (Plus (Times (Var "n", Var "x"),
                      Times (Var "n", Var "y"))) ;;
 #+END_SRC
+
+* 4. Lists
+
+Reference: https://ocaml.org/docs/lists
+
+All elements of a list must be of the same type
+
+#+BEGIN_SRC ocaml
+[1; 2; 3] ;;
+#+END_SRC
+
+List has a head and tail.
+
+#+BEGIN_SRC ocaml
+[] ;;
+
+[false; true; false] ;;
+
+[1; 2; 3] ;;
+
+[[1; 2]; [3; 4]; [5; 6]] ;;
+#+END_SRC
+
+The :: or cons operator adds element to the front of the list.
+
+#+BEGIN_SRC ocaml
+1 :: [2; 3] ;;
+#+END_SRC
+
+The @ operator combines two lists:
+
+#+BEGIN_SRC ocaml
+[1] @ [2; 3] ;;
+#+END_SRC
+
+** Functions on Lists
+
+Using functions to operate on pattern matching with lists:
+
+#+BEGIN_SRC ocaml
+let rec total l =
+  match l with
+  | [] -> 0
+  | h :: t -> h + total t ;;
+#+END_SRC
+
+A function to find the length of a list:
+
+#+BEGIN_SRC ocaml
+let rec length l =
+    match l with
+    | [] -> 0
+    | _ :: t -> 1 + length t;;
+
+length [1; 2; 3] ;;
+
+length ["cow"; "sheep"; "cat"] ;;
+
+length [[]] ;;
+#+END_SRC
+
+In the pattern _ :: t, _ is not inspected as its type is not relevant.
+
+This is a polymorphic function.
+
+A version with the @ operator for append:
+
+#+BEGIN_SRC ocaml
+let rec append a b =
+  match a with
+  | [] -> b
+  | h :: t -> h :: append t b;;
+#+END_SRC
+
+** Higher Order Functions on Lists
+
+A map example:
+
+#+BEGIN_SRC ocaml
+let rec map f l =
+    match l with
+    | [] -> []
+    | h :: t -> f h :: map f t;;
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+map (fun x -> x * 2) [1; 2; 3];;
+
+map total [[1; 2]; [3; 4]; [5; 6]];;
+#+END_SRC
+
+** The Standard Library List Module
+
+*** Maps and Iterators
+
+A map variant for two lists:
+
+#+BEGIN_SRC ocaml
+List.map2 ( + ) [1; 2; 3] [4; 5; 6];;
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+List.iter ;;
+
+List.iter print_endline ["frank"; "james"; "mary"];;
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+List.iter2 ;;
+
+List.iter2
+    (fun a b -> print_endline (a ^ " " ^ b))
+    ["frank"; "james"; "mary"]
+    ["carter"; "lee"; "jones"];;
+#+END_SRC
+
+Notice that map2 and iter2 will fail if the lists are of unequal length:
+
+#+BEGIN_SRC ocaml
+List.map2 ( + ) [1; 2; 3] [4; 5];;
+#+END_SRC
+
+*** List Scanning
+
+Use function mem to check if an element is a member of a list.
+
+#+BEGIN_SRC ocaml
+List.mem ;;
+
+List.mem "frank" ["james"; "frank"; "mary"];;
+
+List.mem [] [[1; 2]; [3]; []; [5]];;
+#+END_SRC
+
+To see if all elements are even in a list, you can go over each
+element of the list, keeping a boolean check, or use mem:
+
+#+BEGIN_SRC ocaml
+let all =
+    not (List.mem false (List.map (fun x -> x mod 2 = 0) [2; 4; 6; 8]));;
+
+let any =
+    List.mem true (List.map (fun x -> x mod 2 = 0) [1; 2; 3]);;
+
+#+END_SRC
+
+Instead use the standard library useful functions for_all and exists:
+
+#+BEGIN_SRC ocaml
+List.for_all (fun x -> x mod 2 = 0) [2; 4; 6; 8];;
+
+List.exists (fun x -> x mod 2 = 0) [1; 2; 3];;
+#+END_SRC
+
+The standard library has evolved into its present state with pieces of
+frequently-used code turned into useful general functions.
+
+*** List Searching
+
+Find returns the first element of a list matching a given predicate.
+
+#+BEGIN_SRC ocaml
+List.find (fun x -> x mod 2 = 0) [1; 2; 3; 4; 5];;
+
+List.find (fun x -> x mod 2 = 0) [1; 3; 5];;
+#+END_SRC
+
+The filter function again takes a predicate and tests it against each element in the list.
+
+#+BEGIN_SRC ocaml
+List.filter (fun x -> x mod 2 = 0) [1; 2; 3; 4; 5];;
+#+END_SRC
+
+Use partition to return a pair of list:
+
+#+BEGIN_SRC ocaml
+List.partition (fun x -> x mod 2 = 0) [1; 2; 3; 4; 5];;
+#+END_SRC
+
+* 5. Loops and Recursions
+
+Reference: https://ocaml.org/docs/loops-recursion
+
+** For Loops and While Loops
+
+Syntax of for loop:
+
+#+BEGIN_SRC ocaml
+for variable = start_value to end_value do
+  expression
+done
+
+for variable = start_value downto end_value do
+  expression
+done
+#+END_SRC
+
+OCaml does not have break, continue or last statements.
+
+You can throw an exception.
+
+The for loop should evaluate and return unit.
+
+#+BEGIN_SRC ocaml
+for i = 1 to 10 do i done ;;
+#+END_SRC
+
+Syntax for while:
+
+#+BEGIN_SRC ocaml
+while boolean-condition do
+  expression
+done
+#+END_SRC
+
+You cannot break out of while, and while loops are second-class
+citizens.
+
+While loops can be used with references.
+
+#+BEGIN_SRC ocaml
+let quit_loop = ref false in
+  while not !quit_loop do
+    print_string "Have you had enough yet? (y/n) ";
+    let str = read_line () in
+      if str.[0] = 'y' then quit_loop := true
+  done ;;
+#+END_SRC
+
+** Looping Over Lists
+
+#+BEGIN_SRC ocaml
+let my_list = [1; 2; 3; 4; 5; 6; 7; 8; 9; 10] ;;
+
+let f elem =
+  Printf.printf "I am looking at element %d now\n" elem
+in
+  List.iter f my_list ;;
+
+List.map (( * ) 2) my_list ;;
+ #+END_SRC
+
+#+BEGIN_SRC ocaml
+let is_even i =
+  i mod 2 = 0
+in
+  List.filter is_even my_list ;;
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+List.mem 12 my_list ;;
+#+END_SRC
+
+List.for_all and List.exists are the "forall" and "exist" operators in
+predicate logic.
+
+To operate on two lists, you have iter2, map2, for_all2, exists2 functions.
+
+#+BEGIN_SRC ocaml
+List.map2 (fun x y -> x + y) [1; 2; 3] [2; 3; 4] ;;
+#+END_SRC
+
+The map and filter functions operate on each individual list elements in isolation.
+
+Fold is like "inserting an operator between each element of the list." 
+
+For example, adding numbers in a list:
+
+#+BEGIN_SRC ocaml
+1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 ;;
+#+END_SRC
+
+Sum of an empty list should be zero, instead of error.
+
+Product of empty list should return one.
+
+To handle left and right-associative operations based on parenthesis,
+there are left and right fold operations.
+
+List.fold_right is less efficient.
+
+Define sum and product functions using List.fold_left for integer lists:
+
+#+BEGIN_SRC ocaml
+let sum = List.fold_left ( + ) 0 ;;
+
+let product = List.fold_left ( * ) 1 ;;
+
+sum my_list ;;
+
+product my_list ;;
+#+END_SRC
+
+Factorial example:
+
+#+BEGIN_SRC ocaml
+let rec range a b =
+    if a > b then []
+    else a :: range (a + 1) b;;
+
+let fact n = product (range 1 n) ;;
+
+fact 10 ;;
+#+END_SRC
+
+** Looping Over Strings
+
+String module has String.copy, String.iter functions and more.
+
+** Recursion
+
+Approach 1: Read entire file using really_input method.
+
+This will not work with keyboard input, channels and sockets.
+
+Approach 2: Use a while loop
+
+Approach 3: Use recursion.
+
+Approach 1 code example:
+
+#+BEGIN_SRC ocaml
+open Printf
+
+let read_whole_chan chan =
+  let len = in_channel_length chan in
+  let result = (Bytes.create len) in
+    really_input chan result 0 len;
+    (Bytes.to_string result)
+
+let read_whole_file filename =
+  let chan = open_in filename in
+    read_whole_chan chan
+
+let main () =
+  let filename = Sys.argv.(1) in
+  let str = read_whole_file filename in
+    printf "I read %d characters from %s\n" (String.length str) filename ;;
+#+END_SRC
+
+Approach 2 code example:
+
+#+BEGIN_SRC ocaml
+open Printf
+
+let read_whole_chan chan =
+  let buf = Buffer.create 4096 in
+  try
+    while true do
+      let line = input_line chan in
+        Buffer.add_string buf line;
+        Buffer.add_char buf '\n'
+    done;
+    assert false (* This is never executed
+	                (always raises Assert_failure). *)
+  with
+    End_of_file -> Buffer.contents buf
+
+let read_whole_file filename =
+  let chan = open_in filename in
+    read_whole_chan chan
+
+let main () =
+  let filename = Sys.argv.(1) in
+  let str = read_whole_file filename in
+    printf "I read %d characters from %s\n" (String.length str) filename ;;
+#+END_SRC
+
+assert false has a polymorphic type, so it will unify with whatever value is returned by the with branch.
+
+Approach 3 code example:
+ 
+#+BEGIN_SRC ocaml
+open Printf
+
+let read_whole_chan chan =
+  let buf = Buffer.create 4096 in
+  let rec loop () =
+    let line = input_line chan in
+      Buffer.add_string buf line;
+      Buffer.add_char buf '\n';
+      loop ()
+  in
+    try loop () with
+      End_of_file -> Buffer.contents buf
+
+let read_whole_file filename =
+  let chan = open_in filename in
+    read_whole_chan chan
+
+let main () =
+  let filename = Sys.argv.(1) in
+  let str = read_whole_file filename in
+  printf "I read %d characters from %s\n" (String.length str) filename ;;
+#+END_SRC
+
+The compiler will turn the recursize loop int a real while loop, which
+runs in constant stack space because of tail recursion an not cause
+stack overflow.e
+
