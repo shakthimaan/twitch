@@ -1335,6 +1335,168 @@ Use partition to return a pair of list:
 List.partition (fun x -> x mod 2 = 0) [1; 2; 3; 4; 5];;
 #+END_SRC
 
+*** Association Lists
+
+For dictionaries, we can use Map or Hashtbl modules.
+
+For smaller list of pairs, List has useful functions.
+
+#+BEGIN_SRC ocaml
+List.assoc ;;
+
+List.assoc 4 [(3, "three"); (1, "one"); (4, "four")] ;;
+
+List.mem_assoc ;;
+
+List.mem_assoc 4 [(3, "three"); (1, "one"); (4, "four")] ;;
+#+END_SRC
+
+You can make a list of pairs from a pair of lists and vice versa:
+
+#+BEGIN_SRC ocaml
+List.split ;;
+
+List.split [(3, "three"); (1, "one"); (4, "four")] ;; 
+
+List.combine ;;
+
+List.combine [3; 1; 4] ["three"; "one"; "four"];;
+#+END_SRC
+
+*** Sorting List
+
+The compare function can compare any two values of like type:
+
+#+BEGIN_SRC ocaml
+compare ;;
+
+compare 3 5 ;;
+
+compare 5 3 ;;
+
+compare 5 5 ;;
+#+END_SRC
+
+Use List.sort with a comparison function.
+
+#+BEGIN_SRC ocaml
+List.sort ;;
+
+List.sort compare [1; 4; 6; 4; 1] ;;
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+Fun.flip ;;
+
+List.sort compare ["Reynolds"; "Smith"; "Barnes"];;
+
+List.sort (Fun.flip compare) [1; 4; 6; 4; 1];;
+
+List.sort compare [(1, 3); (1, 2); (2, 3); (2, 2)];;
+
+List.sort
+    (fun a b -> compare (fst a) (fst b))
+    [(1, 3); (1, 2); (2, 3); (2, 2)];;
+#+END_SRC
+
+*** Folds
+
+#+BEGIN_SRC ocaml
+List.fold_left ;;
+
+List.fold_left ( + ) 0 [1; 2; 3] ;;
+
+(* (+(+(+ 0 1) 2) 3) *)
+#+END_SRC
+
+The max function
+
+#+BEGIN_SRC ocaml
+max ;;
+
+List.fold_left max min_int [2; 4; 6; 0; 1] ;;
+#+END_SRC
+
+The append and map functions using List.fold_right:
+
+#+BEGIN_SRC ocaml
+List.fold_right ;;
+
+List.fold_right ( + ) [1; 2; 3] 0 ;;
+
+(*  (+ 1 (+ 2(+ 3 0)))  *)
+
+let append x y =
+    List.fold_right (fun e a -> e :: a) x y;;
+
+let map f l =
+  List.fold_right (fun e a -> f e :: a) l [] ;;
+#+END_SRC
+
+See: https://github.com/hasura/graphql-engine/pull/2933#discussion_r328410592
+
+List.concat to convert a list of lists into a list can be expensive,
+since larger and larger items are passed to the @ operator as its
+first argument:
+
+#+BEGIN_SRC ocaml
+let concat l = List.fold_left ( @ ) [] l ;;
+#+END_SRC
+
+More examples:
+
+#+BEGIN_SRC ocaml
+let length' l =
+    List.fold_left (fun a _ -> a + 1) 0 l;; 
+
+let rev' l =
+    List.fold_left (fun a e -> e :: a) [] l;;
+
+let split' l =
+    List.fold_right
+      (fun (x, y) (xs, ys) -> (x :: xs, y :: ys))
+      l
+      ([], []);;
+#+END_SRC
+
+** Lists and Tail Recursion
+
+For longer lists, the length function may overflow the stack.
+
+Use an accumulating parameter for the length tail-recursive function:
+
+#+BEGIN_SRC ocaml
+let rec length acc l =
+    match l with
+    | [] -> acc
+    | _ :: t -> length (acc + 1) t;;
+
+let l = length 0 [1; 2; 3] ;;
+#+END_SRC
+
+We can write a wrapper helper function:
+
+#+BEGIN_SRC ocaml
+let rec length_inner acc l =
+    match l with
+    | [] -> acc
+    | _ :: t -> length_inner (acc + 1) t;;
+
+let length l = length_inner 0 l;;
+#+END_SRC
+
+Or, all in one function:
+
+#+BEGIN_SRC ocaml
+let length l =
+    let rec length_inner acc l =
+      match l with
+      | [] -> acc
+      | _ :: t -> length_inner (acc + 1) t
+    in
+      length_inner 0 l;;
+#+END_SRC
+
 * 5. Loops and Recursions
 
 Reference: https://ocaml.org/docs/loops-recursion

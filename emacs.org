@@ -65,7 +65,7 @@ Informative messages can also be displayed.
 
 For example, "C-x =" echoes the character value.
 
-Informative echo area messages are also saved in athe *Messages* buffer.
+Informative echo area messages are also saved in the *Messages* buffer.
 
 If you miss a message, you can check the *Messages* buffer.
 
@@ -158,7 +158,7 @@ You can enter M-a by typing Esc a.
 
 ESC is entered as a special character. You don't hold down ESC while typing the next character.
 
-C-M-a is by holding  Ctrl and Alt and pressing 'a'.
+C-M-a is by holding Ctrl and Alt and pressing 'a'.
 
 Note: On graphical displays, window managers may block some keyboard
 inputs, M-TAB, M-SPC, C-M-d and C-M-l.
@@ -169,7 +169,7 @@ Mouse clicks are referred to as input events.
 
 * Keys
 
-C-f move forward one character.
+C-f moves forward one character.
 
 Some commands take more input events:
 
@@ -205,7 +205,7 @@ M-o
 
 F1 and F2 are aliases for C-h and C-x 6.
 
-You can customize, but, is generally not recommended.
+You can customize, but, it is generally not recommended.
 
 C-h or F1 after a prefix key displays the list of commands for the prefix.
 
