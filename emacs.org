@@ -231,6 +231,207 @@ A variable is a name used to store a value. It is useful for customisation.
 
 * Entering Emacs
 
+From the terminal, you can start Emacs with the "emacs" command.
+
+To run in the background, use "emacs &".
+
+The inital frame is the buffer named "*GNU Emacs*".
+
+The startup screen has information about Emacs and links to common tasks useful for beginners.
+
+You can open the Emacs tutorial with C-h t (help-with-tutorial).
+
+You can open a file with Emacs using "emacs foo.txt".
+
+You can use emacsclient helper program to open a file in the existing Emacs session.
+
+The inhibit-startup-screen is non-nil, it will not show the startup screen.
+
+Use "initial-buffer-choice" to display a file or directory on startup.
+
 * Exiting Emacs
 
+C-x C-c (save-buffers-kill-terminal) to kill emacs.
 
+C-z to suspend Emacs (runs command suspend-frame).
+
+You can resume with the shell command %emacs.
+
+If there are unsaved buffers, Emacs will prompt to save these buffers.
+
+It will also ask for confirmation on any subprocesses that are still running.
+
+For a client frame, it simply closes the connection.
+
+Optionally, it can store session information.
+
+If the value of the variable confirm-kill-emacs (default is nil) is non-nil, C-x C-c assumes it has a predicate function and invokes the same.
+
+If the result of this function is non-nil, the session is killed. Otherwise, it continues to run.
+
+One example function to use is yes-or-no-p.
+
+If confirm-kill-processes (default is t) is nil, C-x C-c does not ask for confirmamtion.
+
+To kill Emacs without being prompted, use M-x kill-emacs.
+
+* Basic Editing Commands
+** Inserting Text
+
+The insertion point moves after entering text.
+
+Use RET (newline) to start a new line.
+
+You can also use C-j.
+
+You can change the way Emacs handles text insertion by turning on minor modes.
+
+In Auto Fill mode, lines are split automatically when they get too long.
+
+Overwrite minor mode causes characters to be replaced (overwritten).
+
+DEL runs the command delete-backward-char.
+
+To insert non-graphic characters, start with C-q (quoted-insert).
+
+Example: C-q DEL
+         C-q 101B (inserts AB)
+
+To use decimal or hexadecimal set variable read-quoted-char-radix to 10 or 16.
+
+Unicode characters can be inserted using C-x 8.
+
+Example: C-x 8 [ inserts '
+         C-x 8 ] inserts '
+         C-x 8 { inserts "
+         C-x 8 } inserts "
+
+TODO: A-[ behaves like C-x 8 [ and inserts '.
+
+To find what key binding use C-x 8 C-h.
+
+Example: C-x 8 C inserts ©.
+
+C-x 8 RET (insert-char) to prompt for Unicode name.
+
+Example: Bactrian Camel.
+
+You can input either:
+1. Unicode name
+2. Hexadecimal value (Unicode convention)
+3. Specified radix (octal)
+
+The following return the same ' character:
+
+C-x 8 RET left single quotation mark RET
+C-x 8 RET left sin TAB RET
+C-x 8 RET 2018 RET
+C-x 8 [
+TODO A-[  (if the Alt key works)
+`    (in Electric Quote mode)
+
+A numeric argument to C-q or C-x 8 specifies how many copies of the character to insert.
+
+** Changing the Location of Point
+
+To move point to:
+
+C-f (forward-char) 
+C-b (backward-char)
+C-p (previous-line)
+C-n (next-line)
+
+You can also use arrow keys or left mouse button to move the point.
+
+Arrow keys
+RIGHT (right-char)
+LEFT  (left-char)
+UP    (previous-line)
+DOWN  (next-line)
+
+C-a (move-beginning-of-line)
+HOME Move to the beginning of line
+
+C-e (move-end-of-line)
+END Move to the end of the line
+
+M-f (forward-word)
+C-RIGHT
+
+M-RIGHT (right-word)
+It moves backward by one word if the current paragraph is right-to-left.
+Example: Bi-directional editing (Arabic, Farsi and Hebrew)
+
+M-b (backward-word)
+Move backward one word
+
+C-LEFT
+M-LEFT (left-word)
+It moves forward by one word if the current paragraph is right-to-left.
+
+M-r (move-to-window-line-top-bottom)
+Reposition point on the left margin of the center-most text line of window.
+On subsequent invocations move to top-most line, bottom-most line and so forth (in cyclic).
+
+M-< (beginning-of-buffer)
+Move to the top of the buffer
+
+With numeric argument n, move to n/10 of the way from the top.
+
+M-> (end-of-buffer)
+C-END
+Move to the end of the buffer.
+
+C-v
+PageDown
+next
+Scroll the display one screen forward and move point onscreen if necessary (scroll-up-command).
+
+M-v
+PageUp
+prior
+Scroll one screen backward, and move point if necessary (scroll-down-command).
+
+M-g c
+Read a number n and move point to buffer position n. Beginning of the buffer is position 1.
+
+M-g M-g
+M-g g
+Read a number n and move point to the beginning of the line number n (goto-line).
+Line 1 is the beginning of the buffer.
+
+M-g TAB
+Read a number n and move to column n in the current line.
+Column 0 is the letmost column.
+
+C-x C-n Use the current column of the point as the semipermanent goal
+column for C-n and C-p in the current buffer.
+
+These commands try to move to this column, or close to it as possible.
+
+C-u C-x C-n
+Cancel the goal column.
+
+You can force Emacs to move according to logical lines (text lines in
+the buffer) by setting variable line-move-visual to nil.
+
+If a logical line occupies multiple screen lines, the cursor then skips over the additional lines.
+
+When line-move-visual is nil, if you set track-eol to non-nil, then
+C-n and C-p start at the end of the logical line, and move to the end
+of the next logical line.
+
+By default, track-eol is nil.
+
+Setting next-line-add-newlines to non-nil, and using C-n on the last
+line creates an additional line at the end and moves down to it.
+
+** Erasing Text
+** Undoing Changes
+** Files
+** Help
+** Blank Lines
+** Continuation Lines
+** Cursor Position Information
+** Numeric Arguments
+** Repeating a Command
