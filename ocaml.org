@@ -1714,7 +1714,176 @@ let main () =
   printf "I read %d characters from %s\n" (String.length str) filename ;;
 #+END_SRC
 
-The compiler will turn the recursize loop int a real while loop, which
-runs in constant stack space because of tail recursion an not cause
-stack overflow.e
+The compiler will turn the recursive loop int a real while loop, which
+runs in constant stack space because of tail recursion and not cause
+stack overflow.
+
+Yes, we should close the channel:
+
+#+BEGIN_SRC ocaml
+...
+    try loop () with
+      End_of_file -> close_in chan; Buffer.contents buf
+#+END_SRC
+
+Recursion is great for constructing and examining certain types of
+data structures, like trees:
+
+TODO: Later in utop: readdir_no_ex, string_of_filesystem, loop, read_directory etc.
+
+Recursion Example: Maximum Element in a List
+
+#+BEGIN_SRC ocaml
+let rec list_max xs =
+  match xs with
+  | [] -> failwith "list_max called on empty list"
+  | [x] -> x
+  | x :: remainder -> max x (list_max remainder) ;;
+
+list_max [1; 2; 3; 4; 1] ;;
+
+list_max [] ;;
+
+list_max [5; 4; 3; 2; 1];;
+
+list_max [5; 4; 3; 2; 1; 100] ;;
+#+END_SRC
+
+If you want, you can also formally prove that list_max is correct.
+
+Tail Recursion
+
+#+BEGIN_SRC ocaml
+let rec range a b =
+  if a > b then []
+  else a :: range (a + 1) b ;;
+#+END_SRC
+
+Rewrite with:
+
+#+BEGIN_SRC ocaml
+let rec range a b =
+  if a > b then [] else 
+    let result = range (a + 1) b in
+      a :: result ;;
+
+List.length (range 1 10) ;;
+
+List.length (range 1 1000000) ;;
+#+END_SRC
+
+range is not tail-recursive, and hence we can use an accumulator.
+
+#+BEGIN_SRC ocaml
+
+let rec range2 a b accum =
+  if a > b then accum
+  else range2 (a + 1) b (a :: accum) ;;
+
+let range a b =
+  List.rev (range2 a b []) ;;
+
+List.length (range 1 1000000) ;;
+#+END_SRC
+
+The following implementation is twice as fast than the previous one
+because it does not need to reverse a list:
+
+** Mutable Records, References (Again!) and Arrays
+
+OCaml records:
+
+#+BEGIN_SRC ocaml
+type pair_of_ints = {a : int; b : int} ;;
+
+{a = 3; b = 5} ;;
+
+{a = 3 } ;;
+#+END_SRC
+
+The record can have a mutable field.
+
+#+BEGIN_SRC ocaml
+type name = {name : string; mutable access_count : int} ;;
+
+let print_name name =
+  print_endline ("The name is " ^ name.name);
+  name.access_count <- name.access_count + 1 ;;
+
+let n = {name = "Richard Jones"; access_count = 0} ;;
+
+n ;;
+
+print_name n ;;
+
+n ;;
+
+print_name n ;;
+
+n ;;
+
+n.name <- "John Smith" ;;
+#+END_SRC
+
+References are implemented using records with a mutable contents field.
+
+The definition at https://v2.ocaml.org/api/Stdlib.html#1_References.
+
+#+BEGIN_SRC ocaml
+let r = ref 100 ;;
+#+END_SRC
+
+Arrays are another mutable structure.
+
+In OCaml, lists are implemented using linked lists and they can be
+slow to find the nth element or random access (because of iterating
+over a list).
+
+The OCaml Array is a real array.
+
+TODO: Array in utop.
+
+** Mutually Recursive Functions
+
+If we want two functions that call each other:
+
+#+BEGIN_SRC ocaml
+let rec even n =
+  match n with
+  | 0 -> true
+  | x -> odd (x - 1) ;;
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+let rec even n =
+  match n with
+  | 0 -> true
+  | x -> odd (x - 1) ;;
+
+let rec odd n =
+  match n with
+  | 0 -> false
+  | x -> even (x - 1);;
+#+END_SRC
+
+No "forward prototypes" in OCaml (as seen in C). Use a special syntax:
+
+#+BEGIN_SRC ocaml
+ let rec even n =
+    match n with
+    | 0 -> true
+    | x -> odd (x - 1)
+  and odd n =
+    match n with
+    | 0 -> false
+    | x -> even (x - 1)  ;;
+
+even 4 ;;
+odd 3 ;;
+
+even 5 ;;
+odd 6 ;;
+#+END_SRC
+
+You can write mutually recursive class definitions and modules.
 
