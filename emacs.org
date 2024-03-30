@@ -427,11 +427,248 @@ Setting next-line-add-newlines to non-nil, and using C-n on the last
 line creates an additional line at the end and moves down to it.
 
 ** Erasing Text
+
+DEL (delete-backward-char)
+BACKSPACE
+Delete the character before point, or the region if it is active.
+
+DEL is not the Delete key. The Delete command deletes the character
+under the cursor.
+
+DEL removes character before point, moving cursor and characters after
+it backwards.
+
+If point is at the beginning of a line, it deletes the preceding
+newlin, and joins the line to the previous one.
+
+If a region is active, DEL deletes the text in the region.
+
+Delete (delete-forward-char)
+Delete character afte point, or the region if it activ.
+
+C-d (delete-char)
+Delete the character at point. 
+
+If the point is at the end of the line, it joins the following line to it.
+
+C-k (kill-line)
+Kill to the end of line.
+
+M-d (kill-word)
+Kill forward to the end of the next word 
+
+M-DEL (backward-kill-word)
+M-BACKSPACE
+
+Kill back to the beginning of the previous word.
+
 ** Undoing Changes
+
+C-/
+C-x u
+C-_
+
+Unde one entry of the undo records.
+
+Normally, it undoes the last change, moving point back to where it was
+before the change.
+
+If you repeat C-/, each repetition undoes another, earlier change.
+
+If all changes are undone, the undo command displays an error message
+and does nothing.
+
 ** Files
+
+To begin editing a file use:
+
+C-x C-f <file> RET
+
+C-x C-f (find-file) uses minibuffer to read the argument.
+
+It creates a buffer, copies the contents of the file into the buffer,
+and displays the same for editing.
+
+C-x C-s (save-buffer)
+
+It copies the altered buffer contents back into the file, making it permanent.
+
+To create a new file, just use C-x C-f. This will create an empty
+buffer, which you can modify and save.
+
 ** Help
+
+C-h k (describe-key)
+
+Example:
+C-h k C-n 
+
+C-h stands for "help".
+
+F1 stands as an alias for C-h.
+
 ** Blank Lines
+
+C-o (open-line)
+Insert a blank line after the cursor.
+
+Note, unlike C-j, the point does not move.
+
+C-x C-o (delete-blank-lines)
+
+Delete all but one of many consecutive blank lines.
+
 ** Continuation Lines
+
+On a text terminal, Emacs displays line wrapping by displaying a `\`
+character at the right margin.
+
+C-k kills a logical line.
+
+C-n (next-line)
+C-p (previous-line)
+These are exceptions that move one screen line.
+
+On a graphical display, a truncated line is indicated by a small
+straight arrow in the right fringe.
+
+On a text terminal, it is indicated by a '$' character in the right
+margin.
+
+You can make Emacs insert a newline automatically when a line gets too
+long (Auto Fill mode).
+
+Visual Line mode enables word wrapping at word boundaries (space or
+tab characters) nearest to the right window edge.
+
+It also redefines editing commands such as C-a, C-n, and C-k to
+operate on screen lines rather than logical lines.
+
 ** Cursor Position Information
+
+M-x what-line
+Display the line number point in the echo area.
+
+M-x line-number-mode
+M-x column-number-mode
+Toggle automatically display of the current line number or column number.
+
+M-= (count-words-region)
+Display the number of lines, words and characters that are present in
+the region.
+
+With prefix, C-u M-=, the command displays a count for the entire buffer.
+
+M-x count-words
+Displays the number of lines, words and characters that are present in the buffer.
+If region is active, displays the numbers for the region.
+
+C-x = 
+Display the character code of character at point, and column of point (what-cursor-position).
+
+Example:
+Char: c (99, #o143, #x63) point=28062 of 36168 (78%) column=53
+
+a. Decimal, octal and hex character codes.
+b. 'point=' shows the position of the point as a character count.
+c. Total number of characters in the buffer (percentage of the total)
+d. 'column=' horizontal position of point.
+
+If what-cursor-show-names is true, the name of the character defined
+by the Unicode Character Database is shown.
+
+Example:
+(99, #o143, #x63, LATIN SMALL LETTER C)
+
+For narrowed buffer, additional text describing the range is displayed.
+
+Example:
+Char: C (67, #o103, #x43) point=252 of 889 (28%) <231-599> column=0
+
+M-x hl-line-mode
+Enable or disabling highlighting of the current line.
+
+M-x size-indication-mode
+Toggle automatic display of the size of the buffer.
+
 ** Numeric Arguments
+
+No argument is equivalent to an argument of one.
+
+M-1, M-2 are bound to digit-argument.
+
+M-5 C-n
+
+Negative arguments can be passed.
+
+M-- means -1.
+
+M-- is bound to negative-argument.
+
+To move down fifty lines, use:
+
+M-5 0 C-n
+
+To insert five zeroes use:
+
+M-5 C-u 0
+
+C-u terminates the prefix argument.
+
+C-u alone has the special meaning of "four times".
+
+It multiplies the argument for the next command by four.
+
+C-u C-u multiplies by sixteen.
+
+C-u C-u C-f moves forward sixteen characters.
+
+C-u C-n
+C-u C-u C-n
+Move down a good fraction of the screen.
+
+C-u C-u C-o
+Make sixteen blank lines.
+
+C-u C-k
+Kill four lines.
+
+C-u 6 4 a
+Insert 64 copies of the character 'a'.
+
+C-u 6 4 1
+Specifies an argument of 641.
+
+You can separate the argument from the digit with another C-u.
+
+C-u 6 4 C-u 1
+Inserts 64 copies of the character '1'.
+
+M-q (fill-paragraph)
+It fills text.
+
+With an argument, it justifies the text as well.
+
+C-k with argument n can kill n lines.
+
+C-u 2 C-k
+
+On graphical displayes, C-0, C-1 behave the same as M-0, M-1 etc.
+
 ** Repeating a Command
+
+If the command you want to repeat needs user input, the M-x
+command-name RET may not work for numeric arguments.
+
+C-x z (repeat)
+Another way to repeat an Emacs command many times.
+
+It repeats the previous Emacs command.
+
+For more than once, type additional 'z'.
+
+Repetition ends when you type a character other than 'z' or press a
+mouse button.
+
+C-u 2 0 C-d to delete 20 characters.
+To delete 80 characters, type C-x z z z.
