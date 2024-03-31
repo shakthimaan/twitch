@@ -310,7 +310,9 @@ TODO: A-[ behaves like C-x 8 [ and inserts '.
 
 To find what key binding use C-x 8 C-h.
 
-Example: C-x 8 C inserts Â©.
+Note: Install ttf-ancient-fonts on Ubuntu to get Unicode characters.
+
+Example: C-x 8 C inserts ©.
 
 C-x 8 RET (insert-char) to prompt for Unicode name.
 
@@ -439,12 +441,12 @@ DEL removes character before point, moving cursor and characters after
 it backwards.
 
 If point is at the beginning of a line, it deletes the preceding
-newlin, and joins the line to the previous one.
+newline, and joins the line to the previous one.
 
 If a region is active, DEL deletes the text in the region.
 
 Delete (delete-forward-char)
-Delete character afte point, or the region if it activ.
+Delete character afte point, or the region if it active.
 
 C-d (delete-char)
 Delete the character at point. 
@@ -455,7 +457,7 @@ C-k (kill-line)
 Kill to the end of line.
 
 M-d (kill-word)
-Kill forward to the end of the next word 
+Kill forward to the end of the next word. 
 
 M-DEL (backward-kill-word)
 M-BACKSPACE
@@ -468,7 +470,7 @@ C-/
 C-x u
 C-_
 
-Unde one entry of the undo records.
+Undo one entry of the undo records.
 
 Normally, it undoes the last change, moving point back to where it was
 before the change.
