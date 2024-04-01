@@ -1887,3 +1887,114 @@ odd 6 ;;
 
 You can write mutually recursive class definitions and modules.
 
+* 6. Opam Install
+
+Reference: https://ocaml.org/install
+
+Install opam
+
+#+BEGIN_SRC sh
+$ bash -c "sh <(curl -fsSL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)"
+#+END_SRC
+
+Review: https://ocaml.org/docs/installing-ocaml
+
+Initialise switch
+
+#+BEGIN_SRC sh
+$ which opam
+$ opam switch
+
+$ opam init
+#+END_SRC
+
+Evaluate environment
+
+#+BEGIN_SRC sh
+$ eval $(opam env --switch=default)
+#+END_SRC
+
+#+BEGIN_SRC sh
+$ opam switch
+#+END_SRC
+
+#+BEGIN_SRC sh
+$ opam list
+#+END_SRC
+
+Install OCaml platform tools:
+
+#+BEGIN_SRC sh
+$ opam install ocaml-lsp-server odoc ocamlformat utop
+#+END_SRC
+
+#+BEGIN_SRC sh
+$ opam list
+#+END_SRC
+
+Verify utop
+
+#+BEGIN_SRC sh
+$ utop
+#+END_SRC
+
+Note:
+   * for Emacs, add these lines to ~/.emacs:
+     (add-to-list 'load-path "/home/shakthi/.opam/default/share/emacs/site-lisp")
+     (require 'ocp-indent)
+
+Test read_line () in utop:
+
+#+BEGIN_SRC sh
+read_line ;;
+
+read_line () ;;
+#+END_SRC
+
+To delete:
+
+#+BEGIN_SRC sh
+$ rm -rf .opam
+$ rm /usr/local/bin/opam
+#+END_SRC
+
+* 7. Introduction to Opam Switches
+
+Reference: https://ocaml.org/docs/opam-switch-introduction
+
+List switches:
+
+#+BEGIN_SRC sh
+$ opam switch list
+#+END_SRC
+
+Help:
+
+#+BEGIN_SRC sh
+$ opam switch --help
+#+END_SRC
+
+List available switches
+
+#+BEGIN_SRC sh
+$ opam switch list-available
+#+END_SRC
+
+Create a new switch:
+
+#+BEGIN_SRC sh
+$ opam switch create 4.14 4.14.2
+#+END_SRC
+
+Change to a specific switch:
+
+#+BEGIN_SRC sh
+$ opam switch 4.14
+#+END_SRC
+
+Confirm the switch:
+
+#+BEGIN_SRC sh
+$ opam switch
+#+END_SRC
+
