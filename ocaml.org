@@ -1998,3 +1998,350 @@ Confirm the switch:
 $ opam switch
 #+END_SRC
 
+#+BEGIN_SRC sh
+$ opam list
+#+END_SRC
+
+See ~/.opam/4.14 and ~/.opam/default.
+* 8. Your First OCaml Program
+
+** Compiling OCaml Programs
+
+OCaml comes with two compilers: one translating sources into native
+binaries and another turning sources into a bytecode format.
+
+OCaml also comes with an interpreter for that bytecode format. 
+
+#+BEGIN_SRC sh
+$ opam list | grep dune
+$ opam exec -- dune init proj hello
+#+END_SRC
+
+If already ran eval $(opam env), omit "opam exec --" command.
+
+#+BEGIN_SRC sh
+$ dune init proj hello
+#+END_SRC
+
+Install tree command to list files and directories:
+
+#+BEGIN_SRC sh
+$ sudo apt install tree
+#+END_SRC
+
+#+BEGIN_SRC sh
+$ cd hello
+$ tree
+#+END_SRC
+
+bin: executable programs
+lib: libraries
+test: tests
+
+Dune can be used for:
+- running tests
+- generate documentation
+- produce packaging metadata
+- create arbitrary files
+
+The _build folder is where Dune stores all the files it generates.
+
+Build:
+
+#+BEGIN_SRC sh
+$ opam exec -- dune build
+#+END_SRC
+
+Execute:
+
+#+BEGIN_SRC sh
+$ opam exec -- dune exec hello
+#+END_SRC
+
+** Watch Mode
+
+#+BEGIN_SRC sh
+$ opam exec -- dune build -w
+
+OR
+
+$ opam exec -- dune exec hello -w
+#+END_SRC
+
+** Why Isn't There a Main Function?
+
+There is no requirement that a project must contain a file with that
+name in order to produce an executable.
+
+An executable OCaml file's entry point is its first line.
+
+Statements are just processed in order from top to bottom, each triggering the side effects it may have. 
+
+Definitions are added to the environment. 
+
+A common practice to single out a value that triggers all the side effects and mark it as the intended main entry point. 
+
+In OCaml, that's the role of "let () =".
+
+** Modules and the Standard Library
+
+A module is a collection of named values.
+
+Identical names from distinct modules don't clash.
+
+The standard library is collection of several modules.
+
+Try printf from the Printf module in bin/main.ml as fellows:
+
+#+BEGIN_SRC sh
+let () = Printf.printf "%s\n" "Hello, World!"
+#+END_SRC
+
+** Every File Defines a Module
+
+Each OCaml file defines a module, once compiled.
+
+References to external moduls create dependencies.
+
+Circular dependencies between modules are not allowed.
+
+To create a module, write a new file lib/en.ml:
+
+#+BEGIN_SRC sh
+let v = "Hello, world!"
+#+END_SRC
+
+Update bin/main.ml:
+
+#+BEGIN_SRC sh
+let () = Printf.printf "%s\n" Hello.En.v
+#+END_SRC
+
+Execute:
+
+#+BEGIN_SRC sh
+opam exec -- dune exec hello
+#+END_SRC
+
+Interactive session using utop
+
+#+BEGIN_SRC sh
+$ opam exec -- dune utop
+#+END_SRC
+
+#+BEGIN_SRC sh
+utop # #show Hello.En ;;
+module En : sig val v : string end
+
+utop # #quit ;;
+#+END_SRC
+
+If you add a file named hello.ml in the lib folder, Dune will consider
+this the whole Hello module and it will make En unreachable.
+
+If you want your module En to be visible, you need to add this in your hello.ml file:
+
+#+BEGIN_SRC sh
+module En = En
+#+END_SRC
+
+** Defining Module Interfaces
+
+UTop's #show command displays an API: the list of definitions provided
+by a module.
+
+In OCaml, this is called a modular interface.
+
+An .ml file defines a module.
+
+An .mli file defines a module interface. It must have the same base
+name as the module file.
+
+Example: en.mli is the module interface for module en.ml
+
+Create lib/en.mli:
+
+#+BEGIN_SRC sh
+val v : string
+#+END_SRC
+
+Only the declarations between sig and end from #show output are written.
+
+Module interfaces are also used to create private definitions.
+
+A module definition is private if it is not listed in its
+correspending module interface.
+
+Update lib/en.ml:
+
+#+BEGIN_SRC sh
+let hello = "Hello"
+let v = hello ^ ", world!"
+#+END_SRC
+
+Update bin/main.ml
+
+#+BEGIN_SRC sh
+let hello = "Hello"
+let v = hello ^ ", world!"
+#+END_SRC
+
+Try compiling:
+
+#+BEGIN_SRC sh
+$ opam exec -- dune exec hello
+#+END_SRC
+
+This is because we have not changed lib/en.mli.
+
+"hello" is not there in en.mli and it is private.
+
+** Defining Multiple Modules in a Library
+
+Multiple modules in a single library.
+
+Create lib/es.ml:
+
+#+BEGIN_SRC sh
+let v = "¡Hola, mundo!"
+#+END_SRC
+
+Update bin/main.ml
+
+#+BEGIN_SRC sh
+let () = Printf.printf "%s\n" Hello.Es.v
+let () = Printf.printf "%s\n" Hello.En.v
+#+END_SRC
+
+Execute:
+
+#+BEGIN_SRC sh
+$ opam exec -- dune exec hello
+#+END_SRC
+
+** Installing and Using Modules from a Package
+
+#+BEGIN_SRC sh
+$ opam install dream
+
+$ opam show -f version dream
+#+END_SRC
+
+Update bin/main.ml
+
+#+BEGIN_SRC sh
+let () = Dream.(run (router [ get "/" (fun (_ : request) -> html Hello.En.v) ]))
+#+END_SRC
+
+It responds to HTTP '/' requests with the content of Hello.En.v
+
+Update bin/dune to include the dream library:
+
+#+BEGIN_SRC sh
+(executable
+ (public_name hello)
+ (name main)
+ (libraries hello dream))
+#+END_SRC
+
+Launch the server:
+
+#+BEGIN_SRC sh
+$ opam exec -- dune exec hello
+#+END_SRC
+
+Test:
+
+#+BEGIN_SRC sh
+$ curl localhost:8080
+#+END_SRC
+
+** Using the Preprocessor to Generate Code
+
+We want to display the output as a list of strings.
+
+#+BEGIN_SRC sh
+$ opam install ppx_show
+#+END_SRC
+
+Update lib/dune:
+
+#+BEGIN_SRC sh
+(library
+ (name hello)
+ (preprocess (pps ppx_show))
+ (libraries ppx_show.runtime))
+#+END_SRC
+
+Update lib/en.mli:
+
+#+BEGIN_SRC sh
+val string_of_string_list : string list -> string
+val v : string list
+#+END_SRC
+
+Update lib/en.ml:
+
+#+BEGIN_SRC sh
+let string_list_pp = [%show: string list]
+
+let string_of_string_list = Format.asprintf "@[%a@]" string_list_pp
+
+let v = String.split_on_char ' ' "Hello using an opam library"
+#+END_SRC
+
+v has the type string list. We're using String.split_on_char to turn a
+string into a string list by splitting the string on space characters.
+
+string_of_string_list has type string list -> string. This converts a
+list of strings into a string, applying the expected formatting.
+
+string_list_pp has type Format.formatter -> string list -> unit, which
+means it is a custom formatter that turns a string list into a string
+
+Edit bin/main.ml:
+
+#+BEGIN_SRC sh
+let () = print_endline Hello.En.(string_of_string_list v)
+#+END_SRC
+
+Execute:
+
+#+BEGIN_SRC sh
+$ opam exec -- dune exec hello
+#+END_SRC
+
+** Minimum setup
+
+#+BEGIN_SRC sh
+$ opam list | grep dune
+
+$ mkdir minimo
+$ cd minimo
+$ touch dune-project dune minimo.ml
+#+END_SRC
+
+dune-project:
+
+#+BEGIN_SRC ocaml
+(lang dune 3.14)
+#+END_SRC
+
+dune
+
+#+BEGIN_SRC ocaml
+(executable (name minimo))
+#+END_SRC
+
+minimo.ml
+
+#+BEGIN_SRC ocaml
+let () = print_endline "My name is Minimo"
+#+END_SRC
+
+Note: minimo.exe is not a file name.
+
+This is how Dune is told to compile the minimo.ml file.
+
+An empty file is valid OCaml syntax.
+
