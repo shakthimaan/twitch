@@ -778,10 +778,10 @@ Example: ~/code/twitch
 
 On MS-Windows and MS-DOS systems, a user does not always have a home directory.
 
-On these systems, ~user-id/ is support only for the logged in current user.
+On these systems, ~user-id/ is only for the logged in current user.
 
 To prevent Emacs from inserting the default directory when reading
-file names, change the variable inser-default-directory to t.
+file names, change the variable insert-default-directory to t.
 
 The minibuffer will start out empty. 
 
@@ -815,7 +815,7 @@ You can switch to another window with C-x o.
 You cannot split the minibuffer window.
 
 If you add two or more lines worth of text into the minibuffer, it
-expands automatically to accomodate the text.
+expands automatically to accommodate the text.
 
 The variable resize-mini-windows controls the resizing of the minibuffer.
 
