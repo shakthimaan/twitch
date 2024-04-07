@@ -312,7 +312,7 @@ To find what key binding use C-x 8 C-h.
 
 Note: Install ttf-ancient-fonts on Ubuntu to get Unicode characters.
 
-Example: C-x 8 C inserts �.
+Example: C-x 8 C inserts ©.
 
 C-x 8 RET (insert-char) to prompt for Unicode name.
 
@@ -674,3 +674,187 @@ mouse button.
 
 C-u 2 0 C-d to delete 20 characters.
 To delete 80 characters, type C-x z z z.
+
+* The Minibuffer
+
+The minibuffer is where Emacs commands reads complicated arguments such as:
+- file names
+- buffer names
+- Emacs command names
+- Lisp expressions. 
+
+It is a “minibuffer" because it’s a special-purpose buffer with a small amount of screen space.
+
+** Using the Minibuffer
+
+When in use, it appears in the echo area with a cursor.
+
+It usually starts with a prompt ending with a colon.
+
+The prompt states what kind of input is expected, and how it will be used.
+
+The prompt is highlighted using the /minibuffer-prompt/ face.
+
+The simplest way is to enter text and use RET to submit the argument and exit the minibuffer.
+
+C-g can be used to exit the minibuffer by canceling the command asked for the argument.
+
+The prompt may show a default argument inside parenthesis and before
+the colon. This will be used if you just type RET.
+
+Example: C-x b (to switch buffer)
+
+With Minibuffer Electric Default mode, a global minor mode, Emacs will
+hide the default argument as soon as you modify the contents of the minibuffer.
+
+On return to the original minibuffer text, the prompt will show the default.
+
+When variable minibuffer-eldef-shorten-default is set to t, the
+default argument is displayed as '[default-arg]' instead of '(default
+default-arg)', saving screen space.
+
+Use M-x minibuffer-electric-default-mode to enable this mode.
+
+Note: If an error message or an informative message is emitted while
+the minibuffer is active, the message hides the minibuffer for a few
+seconds, or until you type something; then the minibuffer comes back.
+
+While the minibuffer is in use, Emacs does not echo keystrokes.
+
+** Minibuffers for File Names
+
+C-x C-f (find-file) uses the minibuffer to read a file name.
+
+Example:
+
+#+BEGIN_SRC sh
+Find file: /u2/emacs/src/
+#+END_SRC
+
+Find file: is the prompt
+
+'/u2/emacs/src/' is the default directory.
+
+You can type a filename in the default directory as input.
+
+Example: ~/.bashrc
+
+Alternative defaults for the file name are available by typing M-n.
+
+A file in the parent directory can be specified using '..'
+
+Example: ~/.ssh/../.bashrc
+
+You can use M-DEL to kill directory name backwards.
+
+Example: ~/code/twitch/ (M-BACKSPACE).
+
+You can kill the entire default with C-a C-k.
+
+You can specify an absolute filename.
+
+Example: /etc/resolv.conf
+
+A double slash causes Emacs to ignore everything before the second slash in the pair.
+
+The ignored part of the filename is dimmed if the terminal allows it.
+
+Use M-x file-name-shadown-mode to disable the dimming and to turn off File Name Shadow Mode.
+
+Example: C-x C-f -> ~/code// /etc/resolv.conf
+
+When completing remote filenames, double slash causes Emacs to ignore
+the file-name part, leaving the rest (method, host and username)
+intact.
+
+Typing three slashes in a row ignores everything in remote filenames.
+
+~/ is your home directory.
+
+~user-id/ means the home directory of a user whose login name is user-id.
+
+Example: ~/code/twitch
+         ~shakthi/code/twitch
+
+On MS-Windows and MS-DOS systems, a user does not always have a home directory.
+
+On these systems, ~user-id/ is support only for the logged in current user.
+
+To prevent Emacs from inserting the default directory when reading
+file names, change the variable inser-default-directory to t.
+
+The minibuffer will start out empty. 
+
+The relative file name arguments are still interpreted based on the same default directory.
+
+You can enter remote file names in the minibuffer.
+
+** Editing in the Minibuffer
+
+The minibuffer is an Emacs buffer.
+
+The usual Emacs commands are available for editing the argument text.
+
+The prompt, however is read-only, and cannot be changed.
+
+RET in the minibuffer submits the argument, and you cannot use it to enter a newline.
+
+C-q C-j inserts a C-j control character, which is equivalent to a newline.
+
+C-o (open-line) can also be used .
+
+TAB, SPC, and '?' are often bound to completion commands.
+
+Use C-q to insert a TAB, SPC or '?' character.
+
+C-a (move-beginning-of-line) in a minibuffer moves point to the
+beginning of the argument text, and not the beginning of the prompt.
+
+You can switch to another window with C-x o.
+
+You cannot split the minibuffer window.
+
+If you add two or more lines worth of text into the minibuffer, it
+expands automatically to accomodate the text.
+
+The variable resize-mini-windows controls the resizing of the minibuffer.
+
+The default value is grow-only.
+
+If the value is t, the minibuffer window will also shrink
+automatically if you remove some lines of text from the minibuffer,
+down to a minimum of one screen line.
+
+The value is nil, the minibuffer window will never change the size
+automatically, but you can use the usual window-resizing commands.
+
+The variable max-mini-window-height controls the maximum height for
+resizing the minibuffer window.
+
+A floating-point number specifies a fraction of the frame’s height.
+
+An integer specifies the maximum number of lines: nil means do not
+resize the minibuffer window automatically. The default value is 0.25.
+
+The C-M-v command in the minibuffer scrolls the help text from
+commands that display help text in another window.
+
+You can also scroll the help text with M-PageUp and M-PageDown (or, equivalently, M-prior and M-next). 
+
+This is especially useful with long lists of possible completions.
+
+Example: C-x C-f /usr/bin TAB C-M-v
+
+Emacs normally disallows most commands that use the minibuffer while the minibuffer is active. 
+
+To allow such commands in the minibuffer, set the variable enable-recursive-minibuffers to t. 
+
+You might need also to enable minibuffer-depth-indicate-mode to show
+the current recursion depth in the minibuffer prompt on recursive use
+of the minibuffer.
+
+When not active, the minibuffer is in minibuffer-inactive-mode, and
+clicking mouse-1 there shows the *Messages* buffer.
+
+If you use a dedicated frame for minibuffers, Emacs also recognizes
+certain keys there, for example, n to make a new frame.
