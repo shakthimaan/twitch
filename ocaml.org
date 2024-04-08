@@ -2538,6 +2538,8 @@ utop # a ;;
 
 Matrix Multiplication
 
+Note: Start with new utop session.
+
 #+BEGIN_SRC ocaml
 
 utop # #use "topfind" ;;
