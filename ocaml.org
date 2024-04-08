@@ -2604,7 +2604,7 @@ val mmult :
 
 let () =
   let n =
-    try int_of_string Sys.argv.(1)
+    try int_of_string "3"
     with Invalid_argument _ -> 1
   and m1 = mkmatrix size size
   and m2 = mkmatrix size size
