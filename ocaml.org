@@ -2203,7 +2203,7 @@ Multiple modules in a single library.
 Create lib/es.ml:
 
 #+BEGIN_SRC sh
-let v = "¡Hola, mundo!"
+let v = "Â¡Hola, mundo!"
 #+END_SRC
 
 Update bin/main.ml
@@ -2345,3 +2345,273 @@ This is how Dune is told to compile the minimo.ml file.
 
 An empty file is valid OCaml syntax.
 
+* 9. utop and IO
+
+A Tour of OCaml
+
+#+BEGIN_SRC ocaml
+utop> read_line ;;
+
+utop> read_line () ;;
+#+END_SRC
+
+Loops and Recursion
+
+#+BEGIN_SRC ocaml
+utop # let quit_loop = ref false in
+         while not !quit_loop do
+           print_string "Have you had enough yet? (y/n) ";
+           let str = read_line () in
+             if str.[0] = 'y' then quit_loop := true
+         done ;;
+Have you had enough yet? (y/n) n
+Have you had enough yet? (y/n) n
+Have you had enough yet? (y/n) n
+Have you had enough yet? (y/n) y
+- : unit = ()
+#+END_SRC
+
+Note: Use Ctrl + l to clear utop output.
+
+Recursion 
+Approach 1
+
+#+BEGIN_SRC ocaml
+utop # let read_whole_chan chan =
+         let len = in_channel_length chan in
+         let result = (Bytes.create len) in
+           really_input chan result 0 len;
+           (Bytes.to_string result) ;;
+val read_whole_chan : in_channel -> string = <fun>
+
+utop # let read_whole_file filename =
+         let chan = open_in filename in
+           read_whole_chan chan ;;
+val read_whole_file : string -> string = <fun>
+
+utop # let main () =
+         let filename = "/etc/resolv.conf" in
+         let str = read_whole_file filename in
+           printf "I read %d characters from %s\n" (String.length str) filename ;;
+val main : unit -> unit = <fun>
+
+utop # main () ;;
+I read 920 characters from /etc/resolv.conf
+- : unit = ()
+#+END_SRC
+
+Approach 2
+
+#+BEGIN_SRC ocaml
+utop # let read_whole_chan chan =
+         let buf = Buffer.create 4096 in
+         try
+           while true do
+             let line = input_line chan in
+               Buffer.add_string buf line;
+               Buffer.add_char buf '\n'
+           done;
+           assert false
+         with
+           End_of_file -> Buffer.contents buf ;;
+val read_whole_chan : in_channel -> string = <fun>
+
+utop # main () ;;
+I read 920 characters from /etc/resolv.conf
+- : unit = ()
+#+END_SRC
+
+Approach 3
+
+#+BEGIN_SRC ocaml
+utop # let read_whole_chan chan =
+         let buf = Buffer.create 4096 in
+         let rec loop () =
+           let line = input_line chan in
+              Buffer.add_string buf line;
+              Buffer.add_char buf '\n';
+              loop ()
+         in
+           try loop () with
+             End_of_file -> Buffer.contents buf ;;
+val read_whole_chan : in_channel -> string = <fun>
+
+utop # main () ;;
+I read 920 characters from /etc/resolv.conf
+- : unit = ()
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+utop # type filesystem = File of string | Directory of filesystem list ;;
+type filesystem = File of string | Directory of filesystem list
+
+utop # #use "topfind" ;;
+- : unit = ()
+Findlib has been successfully loaded. Additional directives:
+  #require "package";;      to load a package
+  #list;;                   to list the available packages
+  #camlp4o;;                to load camlp4 (standard syntax)
+  #camlp4r;;                to load camlp4 (revised syntax)
+  #predicates "p,q,...";;   to set these predicates
+  Topfind.reset();;         to force that packages will be reloaded
+  #thread;;                 to enable threads
+
+- : unit = ()
+utop # #require "unix" ;;
+
+utop # open Unix ;;
+
+utop # let readdir_no_ex dirh =
+       try
+         Some (readdir dirh)
+       with
+         End_of_file -> None ;;
+val readdir_no_ex : dir_handle -> string option = <fun>
+
+utop # readdir_no_ex ;;
+- : dir_handle -> string option = <fun>
+
+utop # let rec string_of_filesystem fs =
+       match fs with
+       | File filename -> filename ^ "\n"
+       | Directory fs_list ->
+           List.fold_left (^) "" (List.map string_of_filesystem fs_list) ;;
+val string_of_filesystem : filesystem -> string = <fun>
+
+utop # let rec read_directory path =
+       let dirh = opendir path in
+       let rec loop () =
+         let filename = readdir_no_ex dirh in
+           match filename with
+           | None -> []
+           | Some "." -> loop ()
+           | Some ".." -> loop ()
+           | Some filename ->
+               let pathname = path ^ "/" ^ filename in
+               let stat = lstat pathname in
+               let this =
+                 if stat.st_kind = S_DIR then
+                   read_directory pathname
+                 else
+                   File pathname
+               in
+                 this :: loop ()
+       in
+         Directory (loop ()) ;;
+val read_directory : string -> filesystem = <fun>
+
+utop # read_directory "~" ;;
+Exception: Unix.Unix_error(Unix.ENOENT, "opendir", "~")
+
+utop # read_directory "/etc" ;;
+Exception: Unix.Unix_error(Unix.EACCES, "opendir", "/etc/cups/ssl")
+
+utop # read_directory "/home/shakthi/code/twitch" ;;
+
+#+END_SRC
+
+Array
+
+#+BEGIN_SRC ocaml
+utop # #use "topfind" ;;
+
+utop # #require "base" ;;
+
+utop # open Base ;;
+
+utop # open Array ;;
+
+utop # let a = Array.create 10 0 ;;
+Line 1, characters 8-20:
+Warning 6 [labels-omitted]: label len was omitted in the application of this function.
+
+val a : int/2 array = [|0; 0; 0; 0; 0; 0; 0; 0; 0; 0|]
+
+utop # for i = 0 to Array.length a - 1 do
+         a.(i) <- i
+       done ;;
+- : unit/2 = ()
+
+utop # a ;;
+- : int/2 array = [|0; 1; 2; 3; 4; 5; 6; 7; 8; 9|]
+#+END_SRC
+
+Matrix Multiplication
+
+#+BEGIN_SRC ocaml
+
+utop # #use "topfind" ;;
+- : unit = ()
+Findlib has been successfully loaded. Additional directives:
+  #require "package";;      to load a package
+  #list;;                   to list the available packages
+  #camlp4o;;                to load camlp4 (standard syntax)
+  #camlp4r;;                to load camlp4 (revised syntax)
+  #predicates "p,q,...";;   to set these predicates
+  Topfind.reset();;         to force that packages will be reloaded
+  #thread;;                 to enable threads
+
+- : unit = ()
+
+utop # #require "stdio" ;;
+
+utop # open Stdio;;
+
+utop # let size = 30 ;;
+val size : int/2 = 30
+
+utop # let mkmatrix rows cols =
+       let count = ref 1
+       and last_col = cols - 1
+       and m = Array.make_matrix rows cols 0 in
+         for i = 0 to rows - 1 do
+           let mi = m.(i) in
+             for j = 0 to last_col do
+               mi.(j) <- !count;
+               incr count
+             done;
+         done;
+         m ;;
+
+Line 4, characters 15-32:
+Warning 6 [labels-omitted]: labels dimx, dimy were omitted in the application of this function.
+
+Line 9, characters 15-19:
+Alert deprecated: Base.incr
+[2016-09] this element comes from the stdlib distributed with OCaml.
+Use [Int.incr] instead.
+
+val mkmatrix : int -> int -> int/2 array array = <fun>
+
+utop # let rec inner_loop k v m1i m2 j =
+       if k < 0 then v
+       else inner_loop (k - 1) (v + m1i.(k) * m2.(k).(j)) m1i m2 j ;;
+val inner_loop : int -> int -> int array -> int array array -> int/2 -> int =
+  <fun>
+
+utop # let mmult rows cols m1 m2 m3 =
+       let last_col = cols - 1
+       and last_row = rows - 1 in
+         for i = 0 to last_row do
+           let m1i = m1.(i) and m3i = m3.(i) in
+           for j = 0 to last_col do
+             m3i.(j) <- inner_loop last_row 0 m1i m2 j
+           done;
+         done ;;
+val mmult :
+  int -> int -> int array array -> int array array -> int array array -> unit/2 =
+  <fun>
+
+let () =
+  let n =
+    try int_of_string Sys.argv.(1)
+    with Invalid_argument _ -> 1
+  and m1 = mkmatrix size size
+  and m2 = mkmatrix size size
+  and m3 = Array.make_matrix size size 0 in
+    for i = 1 to n - 1 do
+      mmult size size m1 m2 m3
+    done;
+    mmult size size m1 m2 m3;
+    Printf.printf "%d %d %d %d\n" m3.(0).(0) m3.(2).(3) m3.(3).(2) m3.(4).(4);;
+#+END_SRC
