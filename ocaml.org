@@ -2617,3 +2617,301 @@ let () =
     mmult size size m1 m2 m3;
     Printf.printf "%d %d %d %d\n" m3.(0).(0) m3.(2).(3) m3.(3).(2) m3.(4).(4);;
 #+END_SRC
+* 10. Labelled and Optional Arguments
+
+Reference: https://ocaml.org/docs/labels
+
+Give names and default values to function parameters. These are known
+as labels.
+
+In this tutorial, the parameters that are not labelled are called
+positional parameters.
+
+** Passing Labelled Arguments
+
+#+BEGIN_SRC ocaml
+utop # Option.value ;;
+#+END_SRC
+
+Labelled arguments are passed using a tilde ~ and can be placed at any
+position and in any order.
+
+#+BEGIN_SRC ocaml
+utop # Option.value (Some 10) ~default:42 ;;
+- : int = 10
+
+utop # Option.value ~default:42 (Some 10) ;;
+- : int = 10
+
+utop # Option.value ~default:42 None ;;
+- : int = 42
+#+END_SRC
+
+Passing labelled arguments through the pipe operator will throw a
+syntax error:
+
+#+BEGIN_SRC ocaml
+utop # ~default:42 |> Option.value None ;;
+Error: Syntax error
+#+END_SRC
+
+** Labelling Parameters
+
+#+BEGIN_SRC ocaml
+utop # let rec range ~first:lo ~last:hi =
+       if lo > hi then []
+       else lo :: range ~first:(lo + 1) ~last:hi ;;
+val range : first:int -> last:int -> int list = <fun>
+
+utop # range ~first:1 ~last:10 ;;
+- : int list = [1; 2; 3; 4; 5; 6; 7; 8; 9; 10]
+
+utop # range ~last:10 ~first:1 ;;
+- : int list = [1; 2; 3; 4; 5; 6; 7; 8; 9; 10]
+#+END_SRC
+
+The parameters of range are named:
+
+- lo and hi inside the function's body, as usual
+- first and last are labels when calling the function.
+
+You can use a shorter syntax:
+
+#+BEGIN_SRC ocaml
+utop # let rec range ~first ~last =
+       if first > last then []
+       else first :: range ~first:(first + 1) ~last ;;
+val range : first:int -> last:int -> int list = <fun>
+
+utop # range ~last:10 ~first:1 ;;
+- : int list = [1; 2; 3; 4; 5; 6; 7; 8; 9; 10]
+#+END_SRC
+
+At parameter definition ~first is the same as ~first:first. Passing
+argument ~last is the same as ~last:last.
+
+** Passing Optional Arguments
+
+Optional arguments can be omitted. 
+
+When passed, a tilde ~ or a question mark ? must be used.
+
+They can be placed at any position and in any order.
+
+#+BEGIN_SRC ocaml
+utop # let sum ?(init=0) u = List.fold_left ( + ) init u;;
+val sum : ?init:int -> int list -> int = <fun>
+
+utop # sum [0; 1; 2; 3; 4; 5];;
+- : int = 15
+
+utop # sum [0; 1; 2; 3; 4; 5] ~init:100;;
+- : int = 115
+#+END_SRC
+
+It is also possible to pass optional arguments as values of type option. 
+
+This is done using a question mark when passing the argument.
+
+#+BEGIN_SRC ocaml
+utop # sum [0; 1; 2; 3; 4; 5] ?init:(Some 100);;
+- : int = 115
+
+utop # sum [0; 1; 2; 3; 4; 5] ?init:None;;
+- : int = 15
+#+END_SRC
+
+** Defining Optional Parameters with Default Values
+
+In the following function, ?init:(x = 0) means that ~init is an
+optional parameter that defaults to 0. Inside the function, the
+parameter is named x.
+
+#+BEGIN_SRC ocaml
+utop # let sum ?init:(x=0) u = List.fold_left ( + ) x u;;
+val sum : ?init:int -> int list -> int = <fun>
+
+utop # sum [0; 1; 2; 3; 4; 5] ?init:(Some 100);;
+- : int = 115
+
+utop # sum [0; 1; 2; 3; 4; 5] ?init:None;;
+- : int = 15
+#+END_SRC
+
+** Defining Optional Parameters Without Default Values
+
+An optional parameter can be declared without specifying a default value.
+
+#+BEGIN_SRC ocaml
+utop # let sub ?(pos=0) ?len:len_opt s =
+    let default = String.length s - pos in
+    let length = Option.value ~default len_opt in
+    String.sub s pos length;;
+val sub : ?pos:int -> ?len:int -> string -> string = <fun>
+#+END_SRC
+
+We are defining a variant of the function String.sub from the standard library:
+
+- s is the string from which we are extracting a substring.
+- pos is the substring's starting position. It defaults to 0.
+- len is the substring's length. If missing, it defaults to String.length s - pos.
+
+When an optional parameter is not given a default value, its type inside the function is made an option. 
+
+So, len appears as ?len:int in the function signature. However, inside the body of the function, len_opt is an int option.
+
+#+BEGIN_SRC ocaml
+utop # sub ~len:5 ~pos:2 "immutability";;
+- : string = "mutab"
+
+utop # sub "immutability" ~pos:7 ;;
+- : string = "ility"
+
+utop # sub ~len:2 "immutability";;
+- : string = "im"
+
+utop # sub "immutability";;
+- : string = "immutability"
+#+END_SRC
+
+It is possible to use the same name for the len parameter and label name.
+
+#+BEGIN_SRC ocaml
+ let sub ?(pos=0) ?len s =
+    let default = String.length s - pos in
+    let length = Option.value ~default len in
+    String.sub s pos length;;
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+utop # sub "immutability";;
+- : string = "immutability"
+
+utop # sub ~len:2 "immutability";;
+- : string = "im"
+
+utop # sub "immutability" ~pos:7 ;;
+- : string = "ility"
+
+utop # sub ~len:5 ~pos:2 "immutability";;
+- : string = "mutab"
+#+END_SRC
+
+** Optional Arguments and Partial Application
+
+Let us compare two variants of the String.concat function.
+
+#+BEGIN_SRC ocaml
+utop # let concat_warn ss ?(sep="") = String.concat sep ss;;
+
+utop #  concat_warn ~sep:"--" ["foo"; "bar"; "baz"];;
+- : string = "foo--bar--baz"
+
+utop # concat_warn ~sep:"";;
+- : string list -> string = <fun>
+
+utop # concat_warn ["foo"; "bar"; "baz"];;
+- : ?sep:string -> string = <fun>
+#+END_SRC
+
+In the second version, the optional separator is the first declared parameter:
+
+#+BEGIN_SRC ocaml
+val concat : ?sep:string -> string list -> string = <fun>
+
+utop # concat ["foo"; "bar"; "baz"] ~sep:"--";;
+- : string = "foo--bar--baz"
+
+utop # concat ~sep:"--";;
+- : string list -> string = <fun>
+
+utop # concat ["foo"; "bar"; "baz"];;
+- : string = "foobarbaz"
+#+END_SRC
+
+Only difference is that when only applied to the argument ["foo"; "bar"; "baz"]. In that case:
+
+- concat returns "foobarbaz". The default value "" of ~sep is passed.
+- concat_warn returns a partially applied function of type ?sep:string -> string. The default value is not passed.
+
+A function's last declared parameter shouldn't be optional. The
+warning suggests turning concat_warn into concat.
+
+Optional parameters make it difficult for the compiler to know if a
+function is partially applied or not.
+
+This is why at least one positional parameter is required after the
+optional ones.
+
+If present at application, it means the function is fully applied, if
+missing, it means the function is partially applied.
+
+** Passing Labelled Arguments Using the Pipe Operator
+
+Declaring a function's unlabelled argument as the first one simplifies
+reading the function's type and does not prevent passing this argument
+using the pipe operator.
+
+#+BEGIN_SRC ocaml
+utop # let rec range step ~first ~last = if first > last then [] else first :: range step ~first:(first + step) ~last;;
+val range : int -> first:int -> last:int -> int list = <fun>
+
+utop # 3 |> range ~last:10 ~first:1;;
+- : int list = [1; 4; 7; 10]
+#+END_SRC
+
+** Function with Only Optional Arguments
+
+When all parameters of a function need to be optional, a dummy,
+positional and occurring last parameter must be added.
+
+The unit () value comes in handy for this. 
+
+#+BEGIN_SRC ocaml
+utop # let hello ?(who="world") () = "hello, " ^ who;;
+val hello : ?who:string -> unit -> string = <fun>
+
+utop # hello ;;
+- : ?who:string -> unit -> string = <fun>
+
+utop # hello () ;;
+- : string = "hello, world"
+
+utop # hello ~who:"sabine" ;;
+- : unit -> string = <fun>
+
+utop # hello ~who:"sabine" () ;;
+- : string = "hello, sabine"
+
+utop # hello () ?who:None ;;
+- : string = "hello, world"
+
+utop # hello ?who:(Some "christine") () ;;
+- : string = "hello, christine"
+#+END_SRC
+
+Without the unit parameter, the optional argument cannot be erased warning would be emitted.
+
+** Forwarding an Optional Argument
+
+Passing an optional argument with a question mark sign ? allows forwarding it without unwrapping.
+
+#+BEGIN_SRC ocaml
+utop # let take ?len s = sub ?len s;;
+val take : ?len:int -> string -> string = <fun>
+
+utop # take "immutability" ~len:2;;
+- : string = "im"
+
+utop # let rtake ?off s = sub ?pos:off s;;
+val rtake : ?off:int -> string -> string = <fun>
+
+utop # rtake "immutability" ~off:7;;
+- : string = "ility"
+#+END_SRC
+
+In the definitions of take and rtake, the function sub is called with optional arguments passed with question marks.
+
+In take the optional argument has the same name as in sub; writing ?len is sufficient to forward without unwrapping.
+
+Functions can have named or optional parameters.
