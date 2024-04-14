@@ -1297,7 +1297,7 @@ You may type either RET or ESC to submit the password.
 An Emacs command may require you to answer a yes-or-no question during
 the course of its execution.
 
-Two varities:
+Two varieties:
 
 1. The prompt ends with '(y or n)':
 
