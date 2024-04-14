@@ -1071,7 +1071,7 @@ setting the variable completion-category-overrides.
 For example, the default setting says to use only basic and substring
 completion for buffer names.
 
-*** 8.4.5 Completion OPtions
+*** 8.4.5 Completion Options
 
 Command names are case sensitive.
 
