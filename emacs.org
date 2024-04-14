@@ -858,3 +858,471 @@ clicking mouse-1 there shows the *Messages* buffer.
 
 If you use a dedicated frame for minibuffers, Emacs also recognizes
 certain keys there, for example, n to make a new frame.
+
+** Completion
+
+Completion is helpful to enter arguments.
+
+TAB, RET, and SPC are rebound in the minibuffer to special completion
+commands.
+
+Type ? to see a list of completion alternatives.
+
+Although completion is usually done in the minibuffer, the feature is sometimes available in ordinary buffers too
+
+*** Completion Example
+
+M-x uses the minibuffer to read the name of a command.
+
+Example: M-x TAB
+
+In order to enable auto-fill-mode, you can try M-x au TAB -> M-x auto TAB -> M-x auto-f TAB.
+
+TAB displays a list of all possible completions in another window
+
+Hence, typing just a u TAB - f TAB (also SPC) allows you to enter ‘auto-fill-mode’.
+
+*** Completion Commands
+
+TAB
+
+Complete the text in the minibuffer as much as possible; if unable to
+complete, display a list of possible completions
+(minibuffer-complete).
+
+SPC
+
+Complete up to one word (next hyphen or space) from the minibuffer
+text before point (minibuffer-complete-word).
+
+This command is not available for arguments that often include spaces,
+such as file names.
+
+RET
+
+Submit the text in the minibuffer as the argument, possibly completing
+first (minibuffer-complete-and-exit).
+
+?
+
+Display a list of completions (minibuffer-completion-help).
+
+The following commands can be used with the completion list:
+
+M-v
+PageUp
+prior
+
+Typing M-v, while in the minibuffer, selects the window showing the
+completion list (switch-to-completions).
+
+RET
+mouse-1
+mouse-2
+
+While in the completion list buffer, this chooses the completion at
+point (choose-completion)
+
+TAB
+RIGHT
+
+While in the completion list buffer, these keys move point to the
+following completion alternative (next-completion).
+
+S-TAB
+LEFT
+
+While in the completion list buffer, these keys move point to the
+previous completion alternative (previous-completion).
+
+q
+
+While in the completion list buffer, this quits the window showing it
+and selects the window showing the minibuffer (quit-window).
+
+Example: Use C-o to show switching windows. Go to Completions buffer, and type q.
+
+z
+
+While in the completion list buffer, kill it and delete the window
+showing it (kill-current-buffer).
+
+*** Completion Exit
+
+On pressing RET (minibuffer-complete-and-exit), there are four types of behaviour:
+
+1. Strict completion: accepts only exact completion matches.
+
+Otherwise, Emacs refuses to exit the minibuffer; instead it tries to
+complete, and if no completion can be done it momentarily displays
+‘[No match]’ after the minibuffer text.
+
+You can still leave the minibuffer by typing C-g to cancel the command.
+
+Example: M-x nothing
+
+2. Cautious completion: is like strict completion, except RET exits
+   only if the text is already an exact match.
+
+Cautious completion is used for reading file names for files that must already exist, for example.
+
+3. Permissive completion: allows any input; the completion candidates are just suggestions.
+
+Typing RET does not complete, it just submits the argument as you have entered it.
+
+4. Permissive completion with confirmation: is like permissive completion, with an exception.
+
+If you typed TAB and this completed the text up to some intermediate
+state (i.e., one that is not yet an exact completion match), typing
+RET right afterward does not submit the argument.
+
+Emacs asks for confirmation by momentarily displaying ‘[Confirm]’
+after the text; type RET again to confirm and submit the text.
+
+You can tweak the confirmation behavior by customizing the variable confirm-nonexistent-file-or-buffer. 
+
+The default value is after-completion gives you a prompt.
+
+If change it to nil, Emacs does not ask for confirmation, falling back to permissive completion.
+
+This behavior is used by most commands that read file names, like C-x
+C-f, and commands that read buffer names, like C-x b.
+
+Example: C-x b
+
+*** How Completion Alternatives are Chosen
+
+Emacs attempts to offer plausible completions under most circumstances.
+
+Emacs performs completion using one or more completion styles—sets of
+criteria for matching minibuffer text to completion alternatives.
+
+If a style yields one or more matches, that is used as the list of
+completion alternatives. 
+
+If a style produces no matches, Emacs falls back on the next style.
+
+The list variable completion-styles specifies the completion styles to use.
+
+The default completion styles are (in order):
+
+1. basic
+
+A matching completion alternative must have the same beginning as the
+text in the minibuffer before point.
+
+Furthermore, if there is any text in the minibuffer after point, the
+rest of the completion alternative must contain that text as a
+substring.
+
+2. partial-completion
+
+This aggressive completion style divides the minibuffer text into
+words separated by hyphens or spaces, and completes each word
+separately.
+
+When completing command names, ‘em-l-m’ completes to ‘emacs-lisp-mode’.)
+
+Example: em-li-mo.
+
+A ‘*’ in the minibuffer text is treated as a wildcard—it matches any
+string of characters at the corresponding position in the completion
+alternative.
+
+3.  emacs22
+
+Similar to basic, except that it ignores the text in the minibuffer after point.
+
+This corresponds to the completion behavior in Emacs 22.
+
+Additional completion styles that are defined:
+
+4. substring
+
+A matching completion alternative must contain the text in the
+minibuffer before point, and the text in the minibuffer after point,
+as substrings (in that same order).
+
+Example: If the text in the minibuffer is ‘foobar’, with point between
+‘foo’ and ‘bar’, that matches ‘afoobbarc’, where a, b, and c can be
+any string including the empty string.
+
+5. flex
+
+It is also known as flx or fuzzy or scatter completion, attempts to
+complete using in-order substrings.
+
+For example, it can consider ‘foo’ to match ‘frodo’ or ‘fbarbazoo’.
+
+6. initials
+
+This very aggressive completion style attempts to complete acronyms and initialisms. 
+
+Example: It matches ‘lch’ to ‘list-command-history’.
+
+7. emacs21
+
+In this style, if the text in the minibuffer is ‘foobar’, only matches
+starting with ‘foobar’ are considered.
+
+You can use different completion styles in different situations, by
+setting the variable completion-category-overrides.
+
+For example, the default setting says to use only basic and substring
+completion for buffer names.
+
+*** 8.4.5 Completion OPtions
+
+Command names are case sensitive.
+
+'AU' does not complete to 'auto-fill-mode'.
+
+When completing file names, case differences are ignored if the
+variable read-file-name-completion-ignore-case is t.
+
+The default value is nil on systems that have case-sensitive
+file-names, such as GNU/Linux; it is t on systems that have
+case-insensitive file-names, such as Microsoft Windows.
+
+When completing buffer names, case differences are ignored if the
+variable read-buffer-completion-ignore-case is set to t; the default
+is nil.
+
+When completing file names, Emacs usually omits certain alternatives
+that are considered unlikely to be chosen, as determined by the list
+variable completion-ignored-extensions.
+
+Each element in the list should be a string. 
+
+Any file name ending in such a string is ignored as a completion alternative.
+
+Any element ending in a slash (/) represents a subdirectory name. 
+
+The standard value of completion-ignored-extensions has several
+elements including ".o", ".elc", and "~".
+
+For example, if a directory contains ‘foo.c’ and ‘foo.elc’, ‘foo’
+completes to ‘foo.c’.
+
+If all possible completions end in otherwise-ignored strings, they are
+not ignored: in the previous example, ‘foo.e’ completes to ‘foo.elc’.
+
+Shell completion is an extended version of filename completion.
+
+If completion-auto-help is set to nil, the completion commands never
+display the completion list buffer; you must type ? to display the
+list.
+
+If the value is lazy, Emacs only shows the completion list buffer on
+the second attempt to complete.
+
+If there is nothing to complete, the first TAB echoes ‘Next char not
+unique’; the second TAB shows the completion list buffer.
+
+If completion-cycle-threshold is set to t, completion commands can
+cycle through completion alternatives.
+
+Each subsequent invocation of the completion command replaces that
+with the next completion alternative, in a cyclic manner.
+
+If you give completion-cycle-threshold a numeric value n, completion
+commands switch to this cycling behavior only when there are n or
+fewer alternatives.
+
+** Minibuffer History
+
+Every argument that you enter with the minibuffer is saved in a
+minibuffer history list so you can easily use it again later.
+
+M-p
+
+Move to the previous item in the minibuffer history, an earlier
+argument (previous-history-element).
+
+Example: M-x auto-fill-mode
+         M-x battery
+         M-p
+
+M-n
+
+Move to the next item in the minibuffer history
+(next-history-element).
+
+UP
+DOWN
+
+Like M-p and M-n, but move to the previous or next line of a
+multi-line item before going to the previous history item
+(previous-line-or-history-element and next-line-or-history-element) .
+
+M-r regexp RET
+
+Move to an earlier item in the minibuffer history that matches regexp
+(previous-matching-history-element).
+
+M-s regexp RET
+
+Move to a later item in the minibuffer history that matches regexp
+(next-matching-history-element).
+
+If you type M-n in the minibuffer when there are no later entries in
+the minibuffer history (e.g., if you haven’t previously typed M-p),
+Emacs tries fetching from a list of default arguments: values that you
+are likely to enter.
+
+You can think of this as moving through the “future history".
+
+The “future history" for file names includes several possible
+alternatives you may find useful, such as the file name or the URL at
+point in the current buffer.
+
+The defaults put into the “future history" in this case are controlled
+by the functions mentioned in the value of the option
+file-name-at-point-functions.
+
+By default, its value invokes the ffap package (see FFAP), which tries
+to guess the default file or URL from the text around point.
+
+To disable this guessing, customize the option to a nil value, then
+the “future history" of file names will include only the file, if any,
+visited by the current buffer, and the default directory.
+
+If you edit the text inserted by the M-p or M-n minibuffer history
+commands, this does not change its entry in the history list.
+
+However, the edited argument does go at the end of the history list
+when you submit it.
+
+A numeric prefix argument n to M-r and M-s means fetch the nth
+matching entry.
+
+An upper-case letter in the regular expression makes the search case-sensitive.
+
+You can also search through the history using an incremental
+search. Example: Isearch Minibuffer.
+
+Emacs keeps separate history lists for several different kinds of arguments. 
+
+For example, there is a list for file names, used by all the commands
+that read file names.
+
+Other history lists include buffer names, command names (used by M-x),
+and command arguments (used by commands like query-replace).
+
+The variable history-length specifies the maximum length of a minibuffer history list.
+
+Adding a new element deletes the oldest element if the list gets too long. 
+
+If the value is t, there is no maximum length.
+
+The variable history-delete-duplicates specifies whether to delete duplicates in history. 
+
+If it is t, adding a new element deletes from the list all other
+elements that are equal to it. The default is nil.
+
+** Repeating Minibuffer Commands
+
+Every command that uses the minibuffer once is recorded on a special
+history list, the command history, together with the values of its
+arguments, so that you can repeat the entire command.
+
+M-x is recorded there, since M-x uses the minibuffer to read the command name.
+
+C-x ESC ESC
+
+Re-execute a recent minibuffer command from the command history
+(repeat-complex-command).
+
+A numeric argument specifies which command to repeat; 1 means the last
+one, 2 the previous, and so on.
+
+Example: C-u 2 C-x ESC ESC
+
+It works by turning the previous command into a Lisp expression and
+then entering a minibuffer initialized with the text for that
+expression.
+
+You can also change the command by editing the Lisp expression before
+you execute it.
+
+The executed command is added to the front of the command history
+unless it is identical to the most recent item.
+
+Once inside the minibuffer for C-x ESC ESC, you can use the usual
+minibuffer history commands (see Minibuffer History) to move through
+the history list.
+
+You can make incremental search commands appear in the history by
+setting isearch-resume-in-command-history to t.
+
+M-x list-command-history
+
+Display the entire command history, showing all the commands C-x ESC
+ESC can repeat, most recent first.
+
+Lisp programs can re-execute a command by calling eval with the command-history element.
+
+** Entering Passwords
+
+You may want to enter a password to visit a file on another machine
+via a network protocol such as FTP, you often need to supply a
+password to gain access to the machine.
+
+Emacs displays a prompt in the echo area (such as ‘Password: ’); after
+you type the required password, press RET to submit it.
+
+To prevent others from seeing your password, every character you type
+is displayed as an asterisk (‘*’) instead of its usual form.
+
+Most of the features and commands associated with the minibuffer
+cannot be used when entering a password.
+
+There is no history or completion, and you cannot change windows or
+perform any other action with Emacs until you have submitted the
+password.
+
+While you are typing the password, you may press DEL to delete
+backwards, removing the last character entered.
+
+C-u deletes everything you have typed so far. 
+
+C-g quits the password prompt (see Quitting). 
+
+C-y inserts the current kill into the password (see Killing). 
+
+You may type either RET or ESC to submit the password.
+
+** Yes or No Prompts
+
+An Emacs command may require you to answer a yes-or-no question during
+the course of its execution.
+
+Two varities:
+
+1. The prompt ends with '(y or n)':
+
+You answer by typing a single key, which immediately exits the
+minibuffer and delivers the response.
+
+Example: C-x C-w (write-file) to save a buffer, and enter the name of
+an existing file, Emacs issues a prompt like this:
+
+  File ‘foo.el’ exists; overwrite? (y or n)
+
+2. The prompt ends with '(yes or no)':
+
+The case when giving the wrong answer would have serious consequences.
+
+It thus features a longer prompt ending with ‘(yes or no)’. 
+
+For example, if you invoke C-x k (kill-buffer) on a file-visiting buffer with unsaved changes, Emacs activates the minibuffer with a prompt like this:
+
+  Buffer foo.el modified; kill anyway? (yes or no)
+
+You can use the following commands at the prompt:
+
+- Recenter the selected window with C-l, 
+- Scroll that window (C-v or PageDown scrolls forward, M-v or PageUp scrolls backward), 
+- Switch to another window with C-x o, 
+- Use the history commands M-p and M-n, etc. 
+- Type C-g to dismiss the query, and quit the minibuffer and the querying command.
