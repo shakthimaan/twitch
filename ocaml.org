@@ -3342,7 +3342,6 @@ utop # let i = ref 0 in
 
 *** Breaking Loops Using Exceptions
 
-
 Throwing the Exit exception is a recommended way to immediately exit from a loop.
 
 #+BEGIN_SRC ocaml
