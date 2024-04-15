@@ -2915,3 +2915,486 @@ In the definitions of take and rtake, the function sub is called with optional a
 In take the optional argument has the same name as in sub; writing ?len is sufficient to forward without unwrapping.
 
 Functions can have named or optional parameters.
+* 11. Mutability and Imperative Control Flow
+
+** Immutable vs Mutable Data
+
+The let name-value inding is immutable.
+
+** References
+
+#+BEGIN_SRC ocaml
+utop # let d = ref 0 ;;
+val d : int ref = {contents = 0}
+
+utop # d ;;
+- : int ref = {contents = 0}
+
+utop # d := 1 ;;
+- : unit = ()
+
+utop # d ;;
+- : int ref = {contents = 1}
+
+utop # !d ;;
+- : int = 1
+#+END_SRC
+
+The assignment operator := is just a function. It takes
+
+- the reference to be updated, and
+- the value that replaces the previous contents.
+
+#+BEGIN_SRC ocaml
+utop # ( := ) ;;
+- : 'a ref -> 'a -> unit = <fun>
+#+END_SRC
+
+The dereference operator is a function that takes a reference and returns its contents.
+
+#+BEGIN_SRC ocaml
+utop # ( ! ) ;;
+- : 'a ref -> 'a = <fun>
+#+END_SRC
+
+** Mutable Record Fields
+
+#+BEGIN_SRC ocaml
+type book = {
+  series : string;
+  volume : int;
+  title : string;
+  author : string;
+  mutable stock : int;
+};;
+#+END_SRC
+
+A stock inventory example:
+
+#+BEGIN_SRC ocaml
+ let vol_7 = {
+    series = "Murderbot Diaries";
+    volume = 7;
+    title = "System Collapse";
+    author = "Martha Wells";
+    stock = 0
+  };;
+#+END_SRC
+
+When new stock arrives:
+
+#+BEGIN_SRC ocaml
+utop # vol_7.stock <- vol_7.stock + 10 ;;
+
+utop # vol_7 ;;
+#+END_SRC
+
+Note: There is no special syntax to dereference a mutable record field.
+
+#+BEGIN_SRC ocaml
+utop # #show_type ref ;;
+type 'a ref = { mutable contents : 'a; }
+#+END_SRC
+
+The type 'a ref is a record with a single field contents, which is
+marked with the mutable keyword.
+
+We can define functions create, assign, and deref using the mutable
+record field update syntax:
+
+#+BEGIN_SRC ocaml
+utop # let create v = { contents = v };;
+val create : 'a -> 'a ref = <fun>
+
+utop # let assign f v = f.contents <- v;; 
+val assign : 'a ref -> 'a -> unit = <fun>
+
+utop # let deref f = f.contents;;
+val deref : 'a ref -> 'a = <fun>
+
+utop # let f = create 0 ;;
+val f : int ref = {contents = 0}
+
+utop # deref f ;;
+- : int = 0
+
+utop # assign f 2 ;;
+- : unit = ()
+
+utop # deref f ;;
+- : int = 2
+#+END_SRC
+
+The functions:
+
+- create does the same as the ref function provided by the standard library.
+- assign does the same as the ( := ) operator.
+- deref does the same as the ( ! ) operator.
+
+** Arrays
+
+In OCaml, an array is a mutable, fixed-size data structure that can
+store a sequence of elements of the same type.
+
+Arrays are indexed by integers, provide constant-time access, and
+allow the update of elements.
+
+#+BEGIN_SRC ocaml
+utop # let g = [| 2; 3; 4; 5; 6; 7; 8 |];;
+val g : int array = [|2; 3; 4; 5; 6; 7; 8|]
+
+utop # g.(0) ;;
+- : int = 2
+
+utop # g.(0) <- 9 ;;
+- : unit = ()
+
+utop # g.(0) ;;
+- : int = 9
+
+utop # g ;;
+- : int array = [|9; 3; 4; 5; 6; 7; 8|]
+#+END_SRC
+
+** Byte Sequences
+
+The bytes type in OCaml represents a fixed-length, mutable byte sequence.
+
+Each element has 8 bits.
+
+bytes values are mutable char sequences.
+
+#+BEGIN_SRC ocaml
+utop # let h = Bytes.of_string "abcdefghijklmnopqrstuvwxyz";;
+val h : bytes = Bytes.of_string "abcdefghijklmnopqrstuvwxyz"
+
+utop # Bytes.get h 10 ;;
+- : char = 'k'
+
+utop # Bytes.set h 10 '_' ;;
+- : unit = ()
+
+utop # h ;;
+- : bytes = Bytes.of_string "abcdefghij_lmnopqrstuvwxyz"
+#+END_SRC
+
+Byte sequences can be created from string values using the function
+Bytes.of_string.
+
+Note: bytes type uses a much more compact memory representation than
+char array.
+
+** Example: get_char Function
+
+We compare two ways to implement a get_char function.
+
+The function waits until a key is pressed and returns the corresponding character without echoing it.
+
+We use two functions from the Unix module to read and update
+attributes of the terminal associated with standard input:
+
+tcgetattr stdin TCSAFLUSH returns the terminal attributes as a record (similar to deref)
+
+tcsetattr stdin TCSAFLUSH updates the terminal attributes (similar to assign)
+
+The logic is the same in both implementations:
+
+1. Read and record the terminal attributes
+2. Set the terminal attributes
+3. Wait until a key is pressed, read it as a character
+4. Restore the initial terminal attributes
+5. Return the read character
+
+We read characters from standard input using the input_char function
+from the OCaml standard library.
+
+#+BEGIN_SRC ocaml
+utop # #use "topfind" ;; 
+
+utop # #require "unix" ;;
+
+utop #  let get_char () =
+    let open Unix in
+    let termio = tcgetattr stdin in
+    let c_icanon, c_echo = termio.c_icanon, termio.c_echo in
+    termio.c_icanon <- false;
+    termio.c_echo <- false;
+    tcsetattr stdin TCSAFLUSH termio;
+    let c = input_char (in_channel_of_descr stdin) in
+    termio.c_icanon <- c_icanon;
+    termio.c_echo <- c_echo;
+    tcsetattr stdin TCSAFLUSH termio;
+    c;;
+val get_char : unit -> char = <fun>
+
+utop # get_char () ;;
+- : char = 'a'
+#+END_SRC
+
+In the second implementation, the record returned by the call to
+tcgetattr is not modified.
+
+A copy is made using { termio with c_icanon = false; c_echo = false }.
+
+#+BEGIN_SRC ocaml
+utop # let get_char () =
+    let open Unix in
+    let termio = tcgetattr stdin in
+    tcsetattr stdin TCSAFLUSH
+      { termio with c_icanon = false; c_echo = false };
+    let c = input_char (in_channel_of_descr stdin) in
+    tcsetattr stdin TCSAFLUSH termio;
+    c;;
+val get_char : unit -> char = <fun>
+
+utop # get_char () ;;
+- : char = 'b'
+#+END_SRC
+
+** Imperative Control Flow
+
+*** Evaluting Expressios in Sequence
+
+Using let ... in construct:
+
+- Names may be bound.
+- Side effects take place in sequence
+
+#+BEGIN_SRC ocaml
+utop # let () = print_string "This is" in print_endline " really Disco!";;
+This is really Disco!
+- : unit = ()
+#+END_SRC
+
+The single semicolon ; operator is known as the sequence operator.
+
+It allows you to evaluate multiple expressions in order.
+
+#+BEGIN_SRC ocaml
+utop # let _ =
+  print_endline "Hello,";
+  print_endline "world!";
+  42;;
+Hello,
+world!
+- : int = 42
+#+END_SRC
+
+Even though it is called the sequence operator, the semicolon is not truly an operator.
+
+It is rather a construct of the language. 
+
+It allows adding a semicolon at the end of a sequence expression.
+
+#+BEGIN_SRC ocaml
+utop # (); 42; ;;
+- : int = 42
+#+END_SRC
+
+The semicolon after 42 is ignored.
+
+What we want to do in order:
+
+1. Increment r
+2. Compute 2 * !r
+3. Assign into r
+
+Use of begin ... end with an example:
+
+#+BEGIN_SRC ocaml
+utop # let f r = r := incr 2; 2 * !r ;;
+Error: This expression has type int but an expression was expected of type
+         int ref
+
+utop # let f r = r := begin incr r; 2 * !r end ;;
+val f : int ref -> unit = <fun>
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+utop # begin end ;;
+- : unit = ()
+#+END_SRC
+
+*** if ... then ... else ... and Side Effects
+
+#+BEGIN_SRC ocaml
+utop #  6 * if "foo" = "bar" then 5 else 5 + 2;;
+- : int = 42
+#+END_SRC
+
+A conditional expression return type can be unit if both branches are
+too.
+
+#+BEGIN_SRC ocaml
+utop # if 0 = 1 then print_endline "foo" else print_endline "bar";;
+bar
+- : unit = ()
+#+END_SRC
+
+The above can also be written as:
+
+#+BEGIN_SRC ocaml
+utop # print_endline (if 0 = 1 then "foo" else "bar");;
+bar
+- : unit = ()
+
+utop # if 0 = 1 then print_endline "foo" else ();;
+- : unit = ()
+#+END_SRC
+
+Without an else branch:
+
+#+BEGIN_SRC ocaml
+utop # if 0 = 1 then print_endline "foo";;
+- : unit = ()
+#+END_SRC
+
+In parsing, conditional expressions groups more than sequencing:
+
+#+BEGIN_SRC ocaml
+utop # if true then print_endline "A" else print_endline "B"; print_endline "C";;
+A
+C
+- : unit = ()
+#+END_SRC
+
+If you want to have two prints in a conditional expression branch, use begin ... end.
+
+#+BEGIN_SRC ocaml
+utop # if true then
+   print_endline "A"
+ else begin
+   print_endline "B";
+   print_endline "C"
+ end;;
+A
+- : unit = ()
+#+END_SRC
+
+Failing to group in the first branch results in a syntax error.
+
+#+BEGIN_SRC ocaml
+utop # if true then
+    print_endline "A";
+    print_endline "C"
+  else
+    print_endline "B";;
+Error: Syntax error
+#+END_SRC
+
+*** For Loop
+
+#+BEGIN_SRC ocaml
+utop # for i = 0 to 5 do Printf.printf "%i\n" i done;;
+0
+1
+2
+3
+4
+5
+- : unit = ()
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+let j = [| 2; 3; 4; 5; 6; 7; 8 |];;
+
+utop # for i = Array.length j - 1 downto 0 do 0 done;;
+#+END_SRC
+
+For loops are convenient to iterate over and modify arrays:
+
+#+BEGIN_SRC ocaml
+utop #  let sum = ref 0 in
+  for i = 0 to Array.length j - 1 do sum := !sum + j.(i) done;
+  !sum;;
+- : int = 35
+#+END_SRC
+
+The same using an iterator function:
+
+#+BEGIN_SRC ocaml
+ let sum = ref 0 in Array.iter (fun i -> sum := !sum + i) j; !sum;;
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+utop #  let sum = ref 0 in Array.iter (fun i -> sum := !sum + i) j; !sum;;
+- : int = 35
+#+END_SRC
+
+*** While Loop
+
+A while loop is an expression of type unit:
+
+#+BEGIN_SRC ocaml
+utop # let i = ref 0 in
+  while !i <= 5 do
+    Printf.printf "%i\n" !i;
+    i := !i + 1;
+  done;;
+0
+1
+2
+3
+4
+5
+- : unit = ()
+#+END_SRC
+
+*** Breaking Loops Using Exceptions
+
+
+Throwing the Exit exception is a recommended way to immediately exit from a loop.
+
+#+BEGIN_SRC ocaml
+utop # try
+    print_endline "Press Escape to exit";
+    while true do
+      let c = get_char () in
+      if c = '\027' then raise Exit;
+      print_char c;
+      flush stdout
+    done
+  with Exit -> ();;
+Press Escape to exit
+- : unit = ()
+#+END_SRC
+
+*** References Inside Closures
+
+The function create_counter returns a closure that hides a mutable
+reference n.
+
+#+BEGIN_SRC ocaml
+utop # let create_counter () =
+  let n = ref 0 in
+  fun () -> incr n; !n;;
+val create_counter : unit -> unit -> int = <fun>
+#+END_SRC
+
+This reference will hold the state of the counter. 
+
+Next, we define a closure that takes no arguments (fun () ->). 
+
+The closure increments the value of n (the counter) using incr n, then
+returns the current value of n using !n.
+
+#+BEGIN_SRC ocaml
+utop # let c1 = create_counter ();;
+val c1 : unit -> int = <fun>
+
+utop # let c2 = create_counter ();;
+val c2 : unit -> int = <fun>
+
+utop # c1 () ;;
+- : int = 1
+
+utop # c1 () ;;
+- : int = 2
+
+utop # c2 () ;;
+- : int = 1
+
+utop # c1 () ;;
+- : int = 3
+#+END_SRC
+
