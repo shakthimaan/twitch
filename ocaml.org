@@ -2203,7 +2203,7 @@ Multiple modules in a single library.
 Create lib/es.ml:
 
 #+BEGIN_SRC sh
-let v = "¡Hola, mundo!"
+let v = "Â¡Hola, mundo!"
 #+END_SRC
 
 Update bin/main.ml
@@ -3397,3 +3397,275 @@ utop # c1 () ;;
 - : int = 3
 #+END_SRC
 
+** Recommendations for Mutable State and Side Effects
+
+We show some patterns and anti-patterns relating to mutable states and side effects:
+
+*** Good: Function-Encapsulated Mutability
+
+No mutability is exposed.
+
+#+BEGIN_SRC ocaml
+utop # let sum m =
+    let result = ref 0 in
+    for i = 0 to Array.length m - 1 do
+      result := !result + m.(i)
+    done;
+    !result;;
+val sum : int array -> int = <fun>
+#+END_SRC
+
+It is a fully encapsulated implementation choice. 
+
+This function is safe to use.
+
+*** Good: Application-Wide State
+
+Some applications maintain state:
+- REPL
+- Server for a stateful protocol (session has state).
+- Text editor
+- Cache
+
+A toy line editor example.
+
+It waits for characters on standard input and exits on end-of-file, carriage return, or newline.
+
+If the character is printable, it prints it and records it in a mutable list used as a stack. 
+
+If the character is the delete code, the stack is popped and the last printed character is erased.
+
+#+BEGIN_SRC ocaml
+utop # #use "topfind" ;; 
+
+utop # #require "unix" ;;
+
+utop # let get_char () =
+    let open Unix in
+    let termio = tcgetattr stdin in
+    tcsetattr stdin TCSAFLUSH
+      { termio with c_icanon = false; c_echo = false };
+    let c = input_char (in_channel_of_descr stdin) in
+    tcsetattr stdin TCSAFLUSH termio;
+    c;;
+val get_char : unit -> char = <fun>
+
+utop # let record_char state c =
+    (String.make 1 c, c :: state);;
+val record_char : char list -> char -> string * char list = <fun>
+
+utop # let remove_char state =
+    ("\b \b", if state = [] then [] else List.tl state);;
+val remove_char : 'a list -> string * 'a list = <fun>
+
+utop # let state_to_string state =
+    List.(state |> rev |> to_seq |> String.of_seq);;
+val state_to_string : char list -> string = <fun>
+
+utop # let rec loop state =
+    let c = get_char () in
+    if c = '\004' || c = '\n' || c = '\r' then raise Exit;
+    let s, new_state = match c with
+      | '\127' -> remove_char !state
+      | c when c >= ' ' -> record_char !state c
+      | _ -> ("", !state) in
+    print_string s;
+    state := new_state;
+    flush stdout;
+    loop state;;
+val loop : char list ref -> 'a = <fun>
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+utop # let state = ref [] in try loop state with Exit -> state_to_string !state;;
+a- : string = "a"
+#+END_SRC
+
+The functions record_char and remove_char neither update the state nor
+produce side effects.
+
+They each return a pair of values consisting of a string to print and
+the next state, new_state.
+
+I/O and state-update side effects happen inside the loop function.
+
+The state is passed as argument to the loop function.
+
+state-aware code is contained in a narrow scope; the rest of the code
+is purely functional.
+
+Note: The state is copied, which is not memory efficient. In a
+memory-aware implementation, state-update functions would produce a
+“diff”.
+
+*** Good: Precomputing Values
+
+Consider store angles as fractions of the circle in 8-bit unsigned integers, storing them as char values. 
+
+So, 64 is 90 degrees, 128 is 180 degrees, 192 is 270 degrees, 256 is full circle, and so on. 
+
+Compute cosine as follows:
+
+#+BEGIN_SRC ocaml
+utop # let char_cos c =
+    c |> int_of_char |> float_of_int |> ( *. ) (Float.pi /. 128.0) |> cos;;
+val char_cos : char -> float = <fun>
+
+utop # char_cos 'c' ;;
+- : float = -0.757208846506484567
+#+END_SRC
+
+Make a faster implementation by precomputing all the possible values in advance. 
+
+There are only 256 of them:
+
+#+BEGIN_SRC ocaml
+utop # let char_cos_tab = Array.init 256 (fun i -> i |> char_of_int |> char_cos);;
+
+utop # let char_cos c = char_cos_tab.(int_of_char c);;
+val char_cos : char -> float = <fun>
+
+utop # char_cos 'c' ;;
+- : float = -0.757208846506484567
+#+END_SRC
+
+*** Good: Memoization
+
+Memoization uses a cache that is populated when calling the function.
+
+The provided arguments:
+- are found in the cache (it is a hit) and the stored result is returned, or they
+- are not found in the cache (it's a miss), and the result is computed, stored in the cache, and returned.
+
+*** Good: Functional by Default
+
+OCaml programs should be written in a mostly functional style. 
+
+Avoid side effects where possible and relying on immutable data instead of mutable state.
+
+*** It Depends: Module State
+
+A module may expose or encapsulate a state in several different ways:
+
+Good: expose a type representing a state, with state creation or reset functions
+
+It depends: only expose state initialisation, which implies there only is a single state
+
+Bad: mutable state with no explicit initialisation function or no name referring to the mutable state
+
+Good example: Hashtbl module.
+
+Hashtbl.t represents the mutable data.
+
+Exposes create, clear and reset functions.
+
+The clear and reset functions return unit. 
+
+This strongly signals the reader that they perform the side-effect of
+updating the mutable data.
+
+#+BEGIN_SRC ocaml
+utop # #show Hashtbl.t ;;
+type ('a, 'b) t = ('a, 'b) Hashtbl.t
+
+utop # Hashtbl.create ;;
+- : ?random:bool -> int -> ('a, 'b) Hashtbl.t = <fun>
+
+utop # Hashtbl.reset ;;
+- : ('a, 'b) Hashtbl.t -> unit = <fun>
+
+utop # Hashtbl.clear ;;
+- : ('a, 'b) Hashtbl.t -> unit = <fun>
+#+END_SRC
+
+A module may define mutable data internally impacting its behaviour
+without exposing it in its interface. This is not advisable.
+
+*** Bad: Undocumented Mutation
+
+#+BEGIN_SRC ocaml
+utop # let partition p k =
+    let m = Array.copy k in
+    let k_len = ref 0 in
+    let m_len = ref 0 in
+    for i = 0 to Array.length k - 1 do
+      if p k.(i) then begin
+        k.(!k_len) <- k.(i);
+        incr k_len
+      end else begin
+        m.(!m_len) <- k.(i);
+        incr m_len
+      end
+    done;
+    (Array.truncate k_len k, Array.truncate m_len m);;
+Error: Unbound value Array.truncate
+#+END_SRC
+
+Array.truncate is not defined.
+
+Array.truncate 3 [5; 6; 7; 8; 9] will return [5; 6; 7].
+
+So, the input array is modified. 
+
+This function has a side effect that is either:
+- not intended, or
+- not documented.
+
+*** Bad: Undocumented Side Effects
+
+#+BEGIN_SRC ocaml
+utop # module Array = struct
+    include Stdlib.Array
+    let copy a =
+      if Array.length a > 1000000 then Analytics.collect "Array.copy" a;
+      copy a
+    end;;
+Error: Unbound module Analytics
+#+END_SRC
+
+Analytics.collect is a function that makes a network connection to
+transmit data to a remote server.
+
+Give the function a descriptive name (for instance,
+Array.copy_with_analytics) and document the fact that there's a
+side-effect that the caller may not be aware of.
+
+*** Bad: Side Effects Depending on Order of Evaluation
+
+#+BEGIN_SRC ocaml
+utop #  let id_print s = print_string (s ^ " "); s;;
+val id_print : string -> string = <fun>
+
+utop #  let s =
+    Printf.sprintf "%s %s %s"
+      (id_print "Monday")
+      (id_print "Tuesday")
+      (id_print "Wednesday");;
+Wednesday Tuesday Monday val s : string = "Monday Tuesday Wednesday"
+#+END_SRC
+
+The evaluation order for function arguments in OCaml is not explicitly
+defined, the order in which the id_print side effects take place is
+unreliable.
+
+In this example, the arguments are evaluated from right to left, but
+this could change in future compiler releases.
+
+This also arises when applying arguments to variant constructors,
+building tuple values, or initialising record fields.
+
+#+BEGIN_SRC ocaml
+utop # let r = ref 0 in ((incr r; !r), (decr r; !r));;
+- : int * int = (0, -1)
+#+END_SRC
+
+The value of this expression depends on the order of subexpression
+evaluation.
+
+Since this order is not specified, there is no reliable way to know
+what this value is.
+
+At the time of writing this tutorial, the evaluation produced (0, -1),
+but if you see something else, it is not a bug.
+
+Such an unreliable value must a avoided.
