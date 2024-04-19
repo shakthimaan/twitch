@@ -1326,3 +1326,249 @@ You can use the following commands at the prompt:
 - Switch to another window with C-x o, 
 - Use the history commands M-p and M-n, etc. 
 - Type C-g to dismiss the query, and quit the minibuffer and the querying command.
+
+* 9. Running Commands by Name
+
+Every Emacs command has a name that you can use to run it. 
+
+For convenience, many commands also have key bindings.
+
+Example: M-x forward-char RET
+         M-x forw TAB c RET
+         C-f
+
+When M-x completes on commands, it ignores the commands that are
+declared obsolete.
+
+Obsolete commands are those for which newer, better alternatives
+exist, and which are slated for removal in some future Emacs release.
+
+C-g to cancel and not run a command.
+
+Numeric arguments are passed before the M-x command.
+
+Example: C-u 42 M-x forward-char RET
+
+If the command has a key binding, Emacs mentions this in the echo area
+after running the command.
+
+You can turn off these messages by setting the variable
+suggest-key-bindings to nil.
+
+The value of suggest-key-bindings can also be a number, in which case
+Emacs will show the binding for that many seconds before removing it
+from display.
+
+The default behavior is to display the binding for 2 seconds.
+
+Emacs mentions such shorthands in the echo area if they are
+significantly shorter than the full command name, and
+extended-command-suggest-shorter is t.
+
+M-x works by running the command execute-extended-command.
+
+* 10. Help
+
+Emacs provides a wide variety of help commands, all accessible through
+the prefix key C-h or F1.
+
+You can also type C-h C-h to view a list of help commands (help-for-help).
+
+Example: C-h C-h
+
+You can scroll the list with SPC and DEL.
+
+Many help commands display their information in a special help buffer.
+
+If you are looking for a certain feature, but don’t know what it is
+called or where to look, we recommend three methods:
+
+1. apropos command
+
+2. Manual index
+
+3. FAQ and package keywords
+
+C-h a topics RET
+
+This searches for commands whose names match the argument topics.
+
+The argument can be a keyword, a list of keywords, or a regular
+expression.
+
+Example: buffer
+
+C-h i d m emacs RET i topic RET
+
+This searches for topic in the indices of the Emacs Info manual,
+displaying the first match found.
+
+Press , to see subsequent matches. You can use a regular expression as
+topic.
+
+C-h i d m emacs RET s topic RET
+
+searches the text of the manual rather than the indices.
+
+C-h C-f
+
+This displays the Emacs FAQ, using Info.
+
+C-h p
+
+This displays the available Emacs packages based on keywords.
+
+C-h or F1 mean “help" in various other contexts as well.
+
+You can type them after a prefix key to view a list of the keys that can follow the prefix key. 
+
+You can also use ? in this context. 
+
+Example: M-x ?
+
+A few prefix keys don’t support C-h or ? in this way, because they
+define other meanings for those inputs, but they all support F1.
+
+** 10.1 Help Summary
+
+C-h a topics RET
+
+Display a list of commands whose names match topics (apropos-command).
+
+C-h b
+
+Display all active key bindings; minor mode bindings first, then those
+of the major mode, then global bindings (describe-bindings).
+
+C-h c key
+
+Show the name of the command that the key sequence key is bound to
+(describe-key-briefly). Here c stands for “character".
+
+Example: C-h c M-x
+
+C-h d topics RET
+
+Display the commands and variables whose documentation matches topics (apropos-documentation).
+
+C-h e
+
+Display the *Messages* buffer (view-echo-area-messages). 
+
+C-h f function RET
+
+Display documentation on the Lisp function named function (describe-function). Since commands are Lisp functions, this works for commands too.
+
+Example: C-h f auto-fill-mode RET
+
+C-h h
+
+Display the HELLO file, which shows examples of various character sets.
+
+Example: Run Emacs in X11.
+
+C-h i
+
+Run Info, the GNU documentation browser (info). The Emacs manual is available in Info.
+
+C-h k key
+
+Display the name and documentation of the command that key runs (describe-key). 
+
+Example: C-h k C-p
+
+C-h l
+
+Display a description of your last 300 keystrokes (view-lossage).
+
+C-h m
+
+Display documentation of the current major mode and minor modes (describe-mode).
+
+C-h n
+
+Display news of recent Emacs changes (view-emacs-news). See Help Files.
+
+C-h o symbol
+
+Display documentation of the Lisp symbol named symbol (describe-symbol). 
+
+This will show the documentation of all kinds of symbols: functions, variables, and faces.
+
+Example: C-h o describe-function
+
+C-h p
+
+Find packages by topic keyword (finder-by-keyword). This lists packages using a package menu buffer
+
+C-h P package RET
+
+Display documentation about the specified package (describe-package).
+
+Example: C-h P calculator RET
+
+C-h r
+
+Display the Emacs manual in Info (info-emacs-manual).
+
+C-h s
+
+Display the contents of the current syntax table (describe-syntax). 
+
+The syntax table says which characters are opening delimiters, which are parts of words, and so on. 
+
+C-h t
+
+Enter the Emacs interactive tutorial (help-with-tutorial).
+
+C-h v var RET
+
+Display the documentation of the Lisp variable var (describe-variable).
+
+Example: C-h v suggest-key-bindings RET
+
+C-h w command RET
+
+Show which keys run the command named command (where-is).
+
+Example: C-h w help-with-tutorial RET
+
+C-h C coding RET
+
+Describe the coding system coding (describe-coding-system).
+
+Example: C-h C utf-8 RET
+
+C-h C RET
+
+Describe the coding systems currently in use.
+
+C-h F command RET
+
+Enter Info and go to the node that documents the Emacs command command (Info-goto-emacs-command-node).
+
+Example: C-h F apropos RET
+
+C-h I method RET
+
+Describe the input method method (describe-input-method).
+
+Example: C-h I dutch RET
+
+C-h K key
+
+Enter Info and go to the node that documents the key sequence key (Info-goto-emacs-key-command-node).
+
+C-h L language-env RET
+
+Display information on the character sets, coding systems, and input methods used in language environment language-env (describe-language-environment). See Language Environments.
+
+Example: C-h L tamil RET
+
+C-h S symbol RET
+
+Display the Info documentation on symbol symbol according to the programming language you are editing (info-lookup-symbol).
+
+C-h .
+
+Display the help message for a special text area, if point is in one (display-local-help). (These include, for example, links in *Help* buffers.) 
