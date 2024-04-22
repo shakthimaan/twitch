@@ -3669,3 +3669,177 @@ At the time of writing this tutorial, the evaluation produced (0, -1),
 but if you see something else, it is not a bug.
 
 Such an unreliable value must a avoided.
+* 12. Options
+
+Reference: https://ocaml.org/docs/options
+
+** Introduction
+
+An option value wraps another value or contains nothing if there isn't anything to wrap.
+
+#+BEGIN_SRC ocaml
+utop # #show option ;;
+type 'a option = None | Some of 'a
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+utop # Some 42 ;;
+- : int option = Some 42
+
+utop # None ;;
+- : 'a option = None
+#+END_SRC
+
+The option type is useful when the lack of data is better handled as
+the special value None rather than an exception.
+
+It is the type-safe version of returning error values.
+
+No confusion between regular values and the absence of a value.
+
+** Exceptions vs Options
+
+Sys.getenv : string -> string from the OCaml standard library queries
+the value of an environment variable; however, it throws an exception
+if the variable is not defined.
+
+#+BEGIN_SRC ocaml
+utop # Sys.getenv "UNDEFINED_ENVIRONMENT_VARIABLE" ;;
+Exception: Not_found.
+#+END_SRC
+
+Sys.getenv_opt : string -> string option does the same, except it
+returns None if the variable is not defined.
+
+#+BEGIN_SRC ocaml
+utop # Sys.getenv_opt "UNDEFINED_ENVIRONMENT_VARIABLE" ;;
+- : string option = None
+#+END_SRC
+
+** The Standard Library Option Module
+
+Most of the functions are provided by Stdlib.Option module.
+
+*** Map Over an Option
+
+Using pattern matching, you can map over an option.
+
+#+BEGIN_SRC ocaml
+utop # Option.map ;;
+- : ('a -> 'b) -> 'a option -> 'b option = <fun>
+
+utop # Option.map (fun x -> x * x) (Some 3);;
+- : int option = Some 9
+
+utop # Option.map (fun x -> x * x) None;;
+- : int option = None
+#+END_SRC
+
+*** Peel-Off Doubly Wrapped Options
+
+join peels off one layer from a doubly wrapped option:
+
+#+BEGIN_SRC ocaml
+utop # Option.join ;;
+- : 'a option option -> 'a option = <fun>
+
+utop #  Option.join (Some (Some 42));;
+- : int option = Some 42
+
+utop # Option.join (Some None);;
+- : 'a option = None
+
+utop # Option.join None;;
+- : 'a option = None
+#+END_SRC
+
+*** Access the Content of an Option
+
+The function get of type 'a option -> 'a allows access to the value
+contained inside an option.
+
+get o throws an exception if o is None. 
+
+To access the content of an option without the risk of raising an
+exception, the function value of type 'a option -> 'a -> 'a can be
+used:
+
+#+BEGIN_SRC ocaml
+utop # Option.get ;;
+- : 'a option -> 'a = <fun>
+
+utop # Option.get (Some 42) ;;
+- : int = 42
+#+END_SRC
+
+Option.value requires a default value as an additional parameter.
+
+#+BEGIN_SRC ocaml
+utop # Option.value ;;
+- : 'a option -> default:'a -> 'a = <fun>
+
+utop # Option.value (Some 42) ~default:0 ;;
+- : int = 42
+#+END_SRC
+
+*** Fold an Option
+
+#+BEGIN_SRC ocaml
+utop # Option.fold ;;
+- : none:'a -> some:('b -> 'a) -> 'b option -> 'a = <fun>
+#+END_SRC
+
+A function that turns the contents of the $PATH environment variable into a list of strings, or the empty list if undefined. This version uses pattern matching:
+
+#+BEGIN_SRC ocaml
+utop # let path () =
+    let split_on_colon = String.split_on_char ':' in
+    let opt = Sys.getenv_opt "PATH" in
+    match opt with
+    | Some s -> split_on_colon s
+    | None -> [];;
+val path : unit -> string list = <fun>
+
+utop # path () ;;
+- : string list =
+["/home/shakthi/.opam/default/bin"; "/home/shakthi/.local/bin";
+ "/usr/local/sbin"; "/usr/local/bin"; "/usr/sbin"; "/usr/bin"; "/sbin";
+ "/bin"; "/usr/games"; "/usr/local/games"; "/snap/bin"; "/snap/bin"]
+#+END_SRC
+
+The Option.fold function can be used to implement a fall-back logic
+without writing pattern matching. Example:
+
+#+BEGIN_SRC ocaml
+utop # let path () =
+    let split_on_colon = String.split_on_char ':' in
+    Sys.getenv_opt "PATH" |> Option.fold ~some:split_on_colon ~none:[];;
+val path : unit -> string list = <fun>
+
+utop # path () ;;
+- : string list =
+["/home/shakthi/.opam/default/bin"; "/home/shakthi/.local/bin";
+ "/usr/local/sbin"; "/usr/local/bin"; "/usr/sbin"; "/usr/bin"; "/sbin";
+ "/bin"; "/usr/games"; "/usr/local/games"; "/snap/bin"; "/snap/bin"]
+#+END_SRC
+
+*** Bind an Option
+
+The bind function of type 'a option -> ('a -> 'b option) -> 'b option
+works a bit like map.
+
+But whilst map expects a function parameter f that returns an
+unwrapped value of type b, bind expects an f that returns a value
+already wrapped in an option 'b option.
+
+Here, we display the type of Option.map, with parameters flipped and
+show a possible implementation of Option.bind.
+
+#+BEGIN_SRC ocaml
+utop # Option.map ;;
+- : ('a -> 'b) -> 'a option -> 'b option = <fun>
+
+utop # let bind o f = o |> Option.map f |> Option.join;;
+val bind : 'a option -> ('a -> 'b option) -> 'b option = <fun>
+#+END_SRC
+
