@@ -4237,17 +4237,23 @@ utop #  Seq.ints 0 |> Seq.take 43 |> List.of_seq;;
 The Seq module also has a function Seq.filter:
 
 #+BEGIN_SRC ocaml
-#+END_SRC
-
-It will build a sequence of elements satisfying a condition.
-
-#+BEGIN_SRC ocaml
 utop # Seq.filter ;;
 - : ('a -> bool) -> 'a Seq.t -> 'a Seq.t = <fun>
 #+END_SRC
 
+It will build a sequence of elements satisfying a condition.
+
 Using the trial division algorithm, we can define a function which
 generates the list of all primes numbers:
+
+#+BEGIN_SRC ocaml
+let rec trial_div seq () = match seq () with
+  | Seq.Cons (m, seq) -> Seq.Cons (m, trial_div (Seq.filter (fun n -> n mod m > 0) seq))
+  | seq -> seq
+let primes = Seq.ints 2 |> trial_div;;
+val trial_div : int Seq.t -> int Seq.t = <fun>
+val primes : int Seq.t = <fun>
+#+END_SRC
 
 #+BEGIN_SRC ocaml
 utop # primes |> Seq.take 100 |> List.of_seq;;
