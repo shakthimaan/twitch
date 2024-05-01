@@ -4053,7 +4053,6 @@ utop # zeroes ;;
 
 This copies two elements of zeroes, starting at index 1 into the last part of zeroes, starting at index 3.
 
-
 * 14. Sequences
 
 Reference: 
@@ -4455,5 +4454,298 @@ utop # range 10 ;;
 
 utop # range 10 |> List.to_seq ;;
 - : int Seq.t = <fun>
+#+END_SRC
+
+* 15. Modules
+
+** Basic Usage
+
+*** File-Based Modules
+
+In OCaml, every piece of code is wrapped into a module. 
+
+Optionally, a module itself can be a submodule of another module.
+
+Create a demo directory with the following files:
+
+athens.ml:
+
+#+BEGIN_SRC ocaml
+let hello () = print_endline "Hello from Athens"
+#+END_SRC
+
+berlin.ml:
+
+#+BEGIN_SRC ocaml
+let () = Athens.hello ()
+#+END_SRC
+
+dune-project:
+
+#+BEGIN_SRC ocaml
+(lang dune 3.7)
+#+END_SRC
+
+dune:
+
+#+BEGIN_SRC ocaml
+(executable (name berlin))
+#+END_SRC
+
+Build and run using:
+
+#+BEGIN_SRC sh
+$ opam exec -- dune build
+
+$ opam exec -- dune exec ./berlin.exe
+Hello from Athens
+#+END_SRC
+
+*** Naming and Scoping
+
+You can open a module inside a definition, using the let open ... in
+construct:
+
+#+BEGIN_SRC ocaml
+utop # let list_sum_sq m =
+    let open List in
+    init m Fun.id |> map (fun i -> i * i) |> fold_left ( + ) 0;;
+val list_sum_sq : int -> int = <fun>
+#+END_SRC
+
+The module access notation can be applied to an entire expression:
+
+#+BEGIN_SRC ocaml
+utop # let array_sum_sq m =
+    Array.(init m Fun.id |> map (fun i -> i * i) |> fold_left ( + ) 0);;
+val array_sum_sq : int -> int = <fun>
+#+END_SRC
+
+** Interfaces and Implementations
+
+Copy athens.ml into cairo.ml as follows:
+
+#+BEGIN_SRC ocaml
+let message = "Hello from Cairo"
+let hello () = print_endline message
+#+END_SRC
+
+cairo.mli:
+
+#+BEGIN_SRC ocaml
+val hello : unit -> unit
+(** [hello()] displays a greeting message. *)
+#+END_SRC
+
+Update dune:
+
+#+BEGIN_SRC ocaml
+(executables (names berlin delhi))
+#+END_SRC
+
+Execute:
+
+#+BEGIN_SRC ocaml
+$ opam exec -- dune exec ./berlin.exe
+Hello from Athens
+
+$ opam exec -- dune exec ./delhi.exe
+Hello from Cairo
+#+END_SRC
+
+** Abstract and Read-Only Types
+
+Create exeter.mli:
+
+#+BEGIN_SRC ocaml
+type aleph = Ada | Alan | Alonzo
+
+type gimel
+val gimel_of_bool : bool -> gimel
+val gimel_flip : gimel -> gimel
+val gimel_to_string : gimel -> string
+
+type dalet = private Dennis of int | Donald of string | Dorothy
+val dalet_of : (int, string) Either.t option -> dalet
+#+END_SRC
+
+Create exeter.ml:
+
+#+BEGIN_SRC ocaml
+type aleph = Ada | Alan | Alonzo
+
+type bet = bool
+
+type gimel = Christos | Christine
+let gimel_of_bool b = if (b : bet) then Christos else Christine
+let gimel_flip = function Christos -> Christine | Christine -> Christos
+let gimel_to_string x = "Christ" ^ match x with Christos -> "os" | _ -> "ine"
+
+type dalet = Dennis of int | Donald of string | Dorothy
+let dalet_of = function
+  | None -> Dorothy
+  | Some (Either.Left x) -> Dennis x
+  | Some (Either.Right x) -> Donald x
+#+END_SRC
+
+Update dune:
+
+#+BEGIN_SRC ocaml
+(executables (names berlin delhi) (modules berlin delhi))
+(library (name exeter) (modules exeter) (modes byte))
+#+END_SRC
+
+Build, and run utop:
+
+#+BEGIN_SRC sh
+$ opam exec -- dune utop
+#+END_SRC
+
+Examples:
+
+#+BEGIN_SRC ocaml
+utop # open Exeter ;;
+
+utop # #show aleph ;;
+type aleph = Ada | Alan | Alonzo
+
+utop # #show bet ;;
+Unknown element.
+
+utop # #show gime1 ;;
+Unknown element.
+
+utop # #show gimel ;;
+type gimel
+
+utop # Christos ;;
+Error: Unbound constructor Christos
+
+utop # #show_val gimel_of_bool ;;
+val gimel_of_bool : bool -> gimel
+
+utop # true |> gimel_of_bool |> gimel_to_string ;;
+- : string = "Christos"
+
+utop #  true |> gimel_of_bool |> gimel_flip |> gimel_to_string;;
+- : string = "Christine"
+
+utop # #show dalet;;
+type dalet = private Dennis of int | Donald of string | Dorothy
+
+utop # Donald 42;;
+Error: This expression has type int but an expression was expected of type
+         string
+
+utop # dalet_of (Some (Either.Left 10));;
+- : dalet = Dennis 10
+
+utop # let dalet_to_string = function
+  | Dorothy -> "Dorothy"
+  | Dennis _ -> "Dennis"
+  | Donald _ -> "Donald";;
+val dalet_to_string : dalet -> string = <fun>
+#+END_SRC
+
+** Submodules
+
+Create florence.ml:
+
+#+BEGIN_SRC ocaml
+module Hello = struct
+  let message = "Hello from Florence"
+  let print () = print_endline message
+end
+
+let print_goodbye () = print_endline "Goodbye"
+#+END_SRC
+
+Create glasgow.ml:
+
+#+BEGIN_SRC ocaml
+let () =
+  Florence.Hello.print ();
+  Florence.print_goodbye ()
+#+END_SRC
+
+Adding signatures in florence.ml module:
+
+#+BEGIN_SRC ocaml
+module Hello : sig
+ val print : unit -> unit
+end = struct
+  let message = "Hello"
+  let print () = print_endline message
+end
+
+let print_goodbye () = print_endline "Goodbye"
+#+END_SRC
+
+Another way of writing florence.ml:
+
+#+BEGIN_SRC ocaml
+module HelloType : sig
+  val print : unit -> unit
+end
+
+module Hello : HelloType = struct
+  let message = "Hello from Florence"
+  let print () = print_endline message
+end
+
+let print_goodbye () = print_endline "Goodbye"
+#+END_SRC
+
+** Module Manipulation
+
+See the contents of an existing Unit module:
+
+#+BEGIN_SRC ocaml
+utop # #show Unit ;;
+module Unit :
+  sig
+    type t = unit = ()
+    val equal : t -> t -> bool
+    val compare : t -> t -> int
+    val to_string : t -> string
+  end
+#+END_SRC
+
+You can dump an .ml file's default interface:
+
+#+BEGIN_SRC sh
+$ ocamlc -c -i cairo.ml
+val message : string
+val hello : unit -> unit
+#+END_SRC
+
+Create extlib.ml:
+
+#+BEGIN_SRC ocaml
+module List = struct
+  include Stdlib.List
+  let uncons = function
+    | [] -> None
+    | hd :: tl -> Some (hd, tl)
+end
+#+END_SRC
+
+** Stateful Modules
+
+#+BEGIN_SRC ocaml
+utop # let s = Random.get_state () ;;
+val s : Random.State.t = <abstr>
+
+utop # Random.bits () ;;
+- : int = 691769754
+
+utop # Random.bits () ;;
+- : int = 1061553262
+
+utop # Random.set_state s ;;
+- : unit = ()
+
+utop # Random.bits () ;;
+- : int = 691769754
 #+END_SRC
 
