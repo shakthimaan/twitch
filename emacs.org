@@ -1982,3 +1982,157 @@ This shows the help text in the echo area.
 
 To display help text automatically whenever it is available at point,
 set the variable help-at-pt-display-when-idle to t.
+* 11. The Mark and the Region
+
+The text between point and the mark is called the region. 
+
+You can also explicitly deactivate the mark at any time, by typing C-g.
+
+If the variable highlight-nonselected-windows is t, each window
+highlights its own region.
+
+** Setting Mark
+
+C-SPC
+C-@
+Set the mark at point, and activate it (set-mark-command).
+
+C-x C-x
+Set the mark at point, and activate it; then move point where the mark used to be (exchange-point-and-mark).
+
+Drag-mouse-1
+Set point and the mark around the text you drag across.
+
+mouse-3
+Set the mark at point, then move point to where you click (mouse-save-then-kill).
+
+Shifted cursor motion keys
+
+Set the mark at point if the mark is inactive, then move point. See Shift Selection.
+
+Example: C-SPC C-f C-x C-u.
+
+You can remember a position in the buffer (by typing C-SPC C-SPC), and
+later jump back there by typing C-u C-SPC.
+
+Many commands that insert text, such as C-y (yank), set the mark at
+the other end of the inserted text, without activating it.
+
+** Commands to Mark Textual Objects
+
+M-@
+Set mark at the end of the next word (mark-word). This does not move point.
+
+Example: Repeated invocations extends the region.
+         C-u 5 M-@
+
+C-M-@
+Set mark after end of following balanced expression (mark-sexp). This does not move point.
+
+M-h
+Move point to the beginning of the current paragraph, and set mark at the end (mark-paragraph).
+
+C-M-h
+Move point to the beginning of the current defun, and set mark at the end (mark-defun).
+
+C-x C-p
+Move point to the beginning of the current page, and set mark at the end (mark-page).
+
+C-x h
+Move point to the beginning of the buffer, and set mark at the end (mark-whole-buffer).
+
+** Operating on the Region
+
+Once you have a region, here are some of the ways you can operate on it:
+
+Kill it with C-w (see Killing).
+
+Copy it to the kill ring with M-w (see Yanking).
+
+Convert case with C-x C-l or C-x C-u (see Case).
+
+Undo changes within it using C-u C-/ (see Undo).
+
+Replace text within it using M-% (see Query Replace).
+
+Indent it with C-x TAB or C-M-\ (see Indentation).
+
+Fill it as text with M-x fill-region (see Filling).
+
+Check the spelling of words within it with M-$ (see Spelling).
+
+Evaluate it as Lisp code with M-x eval-region (see Lisp Eval).
+
+Save it in a register with C-x r s (see Registers).
+
+Save it in a buffer or a file (see Accumulating Text).
+
+If you want the commands to operate on the empty region, change the
+variable use-empty-active-region to t.
+
+If you change the variable delete-active-region to nil, then these
+commands don’t act differently when the mark is active.
+
+If you change the value to kill, these commands kill the region
+instead of deleting it.
+
+Some commands usually have the word region in their names, like C-w
+(kill-region) and C-x C-u (upcase-region).
+
+If the mark is inactive, they operate on the inactive region—that is,
+on the text between point and the position at which the mark was last
+set.
+
+To disable this behavior, change the variable mark-even-if-inactive to
+nil.
+
+Then these commands will instead signal an error if the mark is
+inactive.
+
+To toggle Delete Selection mode on or off, type M-x delete-selection-mode.
+
+** The Mark Ring
+
+C-SPC C-SPC
+Set the mark, pushing it onto the mark ring, without activating it.
+
+C-u C-SPC
+Move point to where the mark was, and restore the mark from the ring of former marks.
+
+If you set set-mark-command-repeat-pop to t, then immediately after
+you type C-u C-SPC, you can type C-SPC instead of C-u C-SPC to cycle
+through the mark ring.
+
+By default, set-mark-command-repeat-pop is nil.
+
+The variable mark-ring-max specifies the maximum number of entries to
+keep in the mark ring.
+
+This defaults to 16 entries.
+
+** The Global Mark Ring
+
+The length of the global mark ring is controlled by
+global-mark-ring-max, and is 16 by default.
+
+** Shift Selection
+
+To turn off shift-selection, set shift-select-mode to nil.
+
+** Disabling Transient Mark Mode
+
+While Transient Mark mode is off, you can activate it temporarily
+using C-SPC C-SPC or C-u C-x C-x.
+
+C-SPC C-SPC
+Set the mark at point (like plain C-SPC) and enable Transient Mark mode just once, until the mark is deactivated. 
+
+C-u C-x C-x
+Exchange point and mark, activate the mark and enable Transient Mark mode temporarily, until the mark is next deactivated. 
+
+One reason you may want to use them is that some commands operate on
+the entire buffer instead of the region when Transient Mark mode is
+off.
+
+Enabling Transient Mark mode momentarily gives you a way to use these
+commands on the region.
