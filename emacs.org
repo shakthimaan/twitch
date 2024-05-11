@@ -2136,3 +2136,273 @@ off.
 
 Enabling Transient Mark mode momentarily gives you a way to use these
 commands on the region.
+* 12. Killing and Moving Text
+
+Killing means erasing text and copying it into the kill ring. 
+
+Yanking means bringing text from the kill ring back into the buffer.
+
+** Deletion and Killing
+
+The commands have the word, 'kill'.
+
+Example: kill-line
+
+The kill ring is shared by all buffers.
+
+C-/ (undo) is used to undo a kill command, but, does not remove it from the kill ring.
+
+Commands that erase text but do not save it in the kill ring are known
+as delete commands; their names usually contain the word ‘delete’.
+
+Example: C-d (delete-char)
+         DEL (delete-backward-char)
+
+** Yanking
+
+*** Introduction
+
+C-y
+Yank the last kill into the buffer, at point (yank).
+
+You jump easily to the mark position, if you wish, with C-u C-SPC.
+
+M-y
+Replace the text just yanked with an earlier batch of killed text (yank-pop).
+
+C-M-w
+Cause the following command, if it is a kill command, to append to the previous kill (append-next-kill)
+
+Example: C-k C-M-w C-y
+
+With a plain prefix argument (C-u C-y), the command instead leaves the
+cursor in front of the inserted text, and sets the mark at the end.
+
+Using any other prefix argument specifies an earlier kill; e.g., C-u 4
+C-y reinserts the fourth most recent kill.
+
+*** The Kill Ring
+
+The maximum number of entries in the kill ring is controlled by the
+variable kill-ring-max.
+
+The default is 60.
+
+The actual contents of the kill ring are stored in a variable named kill-ring.
+
+you can view the entire contents of the kill ring with C-h v kill-ring.
+
+*** Yanking Earlier Kills
+
+M-y (yank-pop) command to cycle through the possibilites.
+
+Example: C-y M-y (...)
+
+*** Appending Kills
+
+"This is a line *of sample text"
+
+Example: M-d M-DEL M-d M-DEL
+         C-h v kill-ring
+         M-b M-b C-u M-d (alternate)
+         M-f M-f C-u M-DEL (alternate)
+
+You can force it to combine with the last killed text, by typing C-M-w
+(append-next-kill).
+
+The C-M-w tells its following command, if it is a kill command, to
+treat the kill as part of the sequence of previous kills.
+
+A kill command following M-w (kill-ring-save) does not append to the
+text that M-w copied into the kill ring.
+
+** "Cut and Paste" Operations on Graphical Displays
+
+*** Introduction
+
+You can specify another coding system by typing C-x RET x or C-x RET X. 
+
+You can also request a different data type by customizing
+x-select-request-type.
+
+*** Using the Clipboard
+
+You can change save-interprogram-paste-before-kill to t for Emacs to
+first save the clipboard to its kill ring, preventing you from losing
+the old clipboard data.
+
+If you change yank-pop-change-selection to t, then M-y saves the new
+yank to the clipboard.
+
+To prevent kill and yank commands from accessing the clipboard, change
+the variable select-enable-clipboard to nil.
+
+If you wish to prevent Emacs from transferring data to the clipboard
+manager, change the variable x-select-enable-clipboard-manager to nil.
+
+Prior to Emacs 24, the kill and yank commands used the primary
+selection (see Primary Selection), not the clipboard.
+
+If you prefer this behavior, change select-enable-clipboard to nil,
+select-enable-primary to t, and mouse-drag-copy-region to t. So:
+
+- clipboard-kill-region kills the region and saves it to the clipboard
+- clipboard-kill-ring-save copies the region to the kill ring and saves it to the clipboard
+- clipboard-yank yanks the contents of the clipboard at point.
+
+*** Cut and Paste with Other Window Applications
+
+Under the X Window System, there exists a primary selection containing
+the last stretch of text selected in an X application (usually by
+dragging the mouse).
+
+If you change the variable select-active-regions to only, Emacs saves
+only temporarily active regions to the primary selection, i.e., those
+made with the mouse or with shift selection.
+
+If you change select-active-regions to nil, Emacs avoids saving active
+regions to the primary selection entirely.
+
+To insert the primary selection into an Emacs buffer, click mouse-2
+(mouse-yank-primary) where you want to insert it.
+
+*** Secondary Selection
+
+M-Drag-mouse-1
+Set the secondary selection, with one end at the place where you press
+down the button, and the other end at the place where you release it
+(mouse-set-secondary).
+
+The selected text is highlighted, using the secondary-selection face,
+as you drag.
+
+M-mouse-1
+Set one endpoint for the secondary selection (mouse-start-secondary).
+
+Use M-mouse-3 to set the other end and complete the selection. 
+
+M-mouse-3
+Set the secondary selection (mouse-secondary-save-then-kill), with one
+end at the position you click M-mouse-3, and the other at the position
+specified previously with M-mouse-1.
+
+M-mouse-2
+Insert the secondary selection where you click, placing point at the
+end of the yanked text (mouse-yank-secondary).
+
+Double or triple clicking of M-mouse-1 operates on words and lines,
+much like mouse-1.
+
+If mouse-yank-at-point is non-nil, M-mouse-2 yanks at point.
+
+** Accumulating Text
+
+There are convenient methods for copying one block of text in many
+places, or for copying many scattered blocks of text into one place.
+
+We describe the commands to accumulate scattered pieces of text into a
+buffer or into a file.
+
+M-x append-to-buffer
+Append region to the contents of a specified buffer.
+
+M-x prepend-to-buffer
+Prepend region to the contents of a specified buffer.
+
+M-x copy-to-buffer
+Copy region into a specified buffer, deleting that buffer’s old contents.
+
+M-x insert-buffer
+Insert the contents of a specified buffer into current buffer at point.
+
+M-x append-to-file
+Append region to the contents of a specified file, at the end.
+
+Example: Use *GNU Emacs* and *scratch* buffers.
+
+** Rectangles
+
+A rectangular region can also be marked using the mouse: click and drag C-M-mouse-1 from one corner of the rectangle to the opposite.
+
+C-x r k
+Kill the text of the region-rectangle, saving its contents as the last killed rectangle (kill-rectangle).
+
+C-x r M-w
+Save the text of the region-rectangle as the last killed rectangle (copy-rectangle-as-kill).
+
+C-x r d
+Delete the text of the region-rectangle (delete-rectangle).
+
+C-x r y
+Yank the last killed rectangle with its upper left corner at point (yank-rectangle).
+
+C-x r o
+Insert blank space to fill the space of the region-rectangle (open-rectangle). This pushes the previous contents of the region-rectangle to the right.
+
+C-x r N
+Insert line numbers along the left edge of the region-rectangle (rectangle-number-lines). This pushes the previous contents of the region-rectangle to the right.
+
+C-x r c
+Clear the region-rectangle by replacing all of its contents with spaces (clear-rectangle).
+
+M-x delete-whitespace-rectangle
+Delete whitespace in each of the lines on the specified rectangle, starting from the left edge column of the rectangle.
+
+C-x r t string RET
+Replace rectangle contents with string on each line (string-rectangle).
+
+M-x string-insert-rectangle RET string RET
+Insert string on each line of the rectangle.
+
+C-x SPC
+Toggle Rectangle Mark mode (rectangle-mark-mode)
+
+Example Text:
+GNU Emacs comes with ABSOLUTELY NO WARRANTY; type C-h C-w for full details.
+Emacs is Free Software--Free as in Freedom--so you can redistribute copies
+of Emacs and modify it; type C-h C-c to see the conditions.
+Type C-h C-o for information on getting the latest version.
+
+When the region is in rectangle-mark-mode, C-x C-x runs the command
+rectangle-exchange-point-and-mark, which cycles between the four
+corners of the region-rectangle.
+
+** CUA
+
+M-x cua-mode sets up key bindings that are compatible with the Common
+User Access (CUA) system used in many other applications.
+
+C-x, C-c, C-v, and C-z invoke commands that cut (kill), copy, paste
+(yank), and undo respectively.
+
+The C-x and C-c keys perform cut and copy only if the region is
+active.
+
+Otherwise, they still act as prefix keys, so that standard Emacs
+commands like C-x C-c still work.
+
+Note that this means the variable mark-even-if-inactive has no effect
+for C-x and C-c.
+
+To enter an Emacs command like C-x C-f while the mark is active, use
+one of the following methods: either hold Shift together with the
+prefix key, e.g., S-C-x C-f, or quickly type the prefix key twice,
+e.g., C-x C-x C-f.
+
+To disable the overriding of standard Emacs binding by CUA mode, while
+retaining the other features of CUA mode described below, set the
+variable cua-enable-cua-keys to nil.
+
+CUA mode by default activates Delete-Selection mode (see Mouse
+Commands) so that typed text replaces the active region. To use CUA
+without this behavior, set the variable cua-delete-selection to nil.
+
+Use C-RET to start a rectangle, extend it using the movement commands,
+and cut or copy it using C-x or C-c.
+
+You can use this rectangle support without activating CUA by calling
+the cua-rectangle-mark-mode command.
+
+There is also the standard command rectangle-mark-mode.
+
+Use C-S-SPC to toggle the global mark on and off.
