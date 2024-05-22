@@ -4987,3 +4987,299 @@ utop # R2.bits () ;;
 utop # R1.bits () ;;
 - : int = 75783189
 #+END_SRC
+* 17. Maps
+
+** Introduction
+
+#+BEGIN_SRC ocaml
+utop # module StringMap = Map.Make(String) ;;
+module StringMap :
+  sig
+    type key = string
+    type 'a t = 'a Map.Make(String).t
+    val empty : 'a t
+    val add : key -> 'a -> 'a t -> 'a t
+    val add_to_list : key -> 'a -> 'a list t -> 'a list t
+    val update : key -> ('a option -> 'a option) -> 'a t -> 'a t
+    val singleton : key -> 'a -> 'a t
+    val remove : key -> 'a t -> 'a t
+    val merge :
+      (key -> 'a option -> 'b option -> 'c option) -> 'a t -> 'b t -> 'c t
+    val union : (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
+    val cardinal : 'a t -> int
+    val bindings : 'a t -> (key * 'a) list
+    val min_binding : 'a t -> key * 'a
+    val min_binding_opt : 'a t -> (key * 'a) option
+    val max_binding : 'a t -> key * 'a
+    val max_binding_opt : 'a t -> (key * 'a) option
+    val choose : 'a t -> key * 'a
+    val choose_opt : 'a t -> (key * 'a) option
+    val find : key -> 'a t -> 'a
+    val find_opt : key -> 'a t -> 'a option
+    val find_first : (key -> bool) -> 'a t -> key * 'a
+    val find_first_opt : (key -> bool) -> 'a t -> (key * 'a) option
+    val find_last : (key -> bool) -> 'a t -> key * 'a
+    val find_last_opt : (key -> bool) -> 'a t -> (key * 'a) option
+    val iter : (key -> 'a -> unit) -> 'a t -> unit
+    val fold : (key -> 'a -> 'acc -> 'acc) -> 'a t -> 'acc -> 'acc
+    val map : ('a -> 'b) -> 'a t -> 'b t
+    val mapi : (key -> 'a -> 'b) -> 'a t -> 'b t
+    val filter : (key -> 'a -> bool) -> 'a t -> 'a t
+    val filter_map : (key -> 'a -> 'b option) -> 'a t -> 'b t
+    val partition : (key -> 'a -> bool) -> 'a t -> 'a t * 'a t
+    val split : key -> 'a t -> 'a t * 'a option * 'a t
+    val is_empty : 'a t -> bool
+    val mem : key -> 'a t -> bool
+    val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
+    val compare : ('a -> 'a -> int) -> 'a t -> 'a t -> int
+    val for_all : (key -> 'a -> bool) -> 'a t -> bool
+    val exists : (key -> 'a -> bool) -> 'a t -> bool
+    val to_list : 'a t -> (key * 'a) list
+    val of_list : (key * 'a) list -> 'a t
+    val to_seq : 'a t -> (key * 'a) Seq.t
+    val to_rev_seq : 'a t -> (key * 'a) Seq.t
+    val to_seq_from : key -> 'a t -> (key * 'a) Seq.t
+    val add_seq : (key * 'a) Seq.t -> 'a t -> 'a t
+    val of_seq : (key * 'a) Seq.t -> 'a t
+  end
+#+END_SRC
+
+** Creating a Map
+
+#+BEGIN_SRC ocaml
+utop # let int_map : int StringMap.t = StringMap.empty;;
+val int_map : int StringMap.t = <abstr>
+
+utop # let float_map : float StringMap.t = StringMap.empty;;
+val float_map : float StringMap.t = <abstr>
+
+utop # let float_map : float StringMap.t = StringMap.empty;;
+val float_map : float StringMap.t = <abstr>
+#+END_SRC
+
+** Working with Maps
+
+#+BEGIN_SRC ocaml
+ let lucky_numbers = StringMap.of_seq @@ List.to_seq [
+    ("leostera", 2112);
+    ("charstring88", 88);
+    ("divagnz", 13);
+  ];;
+val lucky_numbers : int StringMap.t = <abstr>
+
+utop # let printMap m = StringMap.iter (fun key value -> Printf.printf "%s --> %d\n" key value) m ;;
+val printMap : int StringMap.t -> unit = <fun>
+
+utop # printMap lucky_numbers ;;
+charstring88 --> 88
+divagnz --> 13
+leostera --> 2112
+- : unit = ()
+#+END_SRC
+
+** Finding Entries in a Map
+
+#+BEGIN_SRC ocaml
+utop # StringMap.find_opt "leostera" lucky_numbers;;
+- : int option = Some 2112
+
+utop # StringMap.find "leostera" lucky_numbers;;
+- : int = 2112
+
+utop # let first_under_10_chars : (string * int) option =
+  StringMap.find_first_opt
+    (fun key -> String.length key < 10)
+    lucky_numbers;;
+val first_under_10_chars : (string * int) option = Some ("divagnz", 13)
+#+END_SRC
+
+** Adding Entries to a Map
+
+#+BEGIN_SRC ocaml
+utop # let more_lucky_numbers = lucky_numbers |> StringMap.add "paguzar" 108;;
+val more_lucky_numbers : int StringMap.t = <abstr>
+
+utop # StringMap.find_opt "paguzar" lucky_numbers;;
+- : int option = None
+
+utop # StringMap.find_opt "paguzar" more_lucky_numbers;;
+- : int option = Some 108
+#+END_SRC
+
+** Removing Entries from a Map
+
+#+BEGIN_SRC ocaml
+utop # let less_lucky_numbers = lucky_numbers |> StringMap.remove "divagnz";;
+val less_lucky_numbers : int StringMap.t = <abstr>
+
+utop # StringMap.find_opt "divagnz" lucky_numbers;;
+- : int option = Some 13
+
+utop #  StringMap.find_opt "divagnz" less_lucky_numbers;;
+- : int option = None
+#+END_SRC
+
+** Changing the value associated with a key
+
+#+BEGIN_SRC ocaml
+utop #  let updated_lucky_numbers =
+    lucky_numbers
+    |> StringMap.update "charstring88" (Option.map (fun _ -> 99));;
+val updated_lucky_numbers : int StringMap.t = <abstr>
+
+utop #  StringMap.find_opt "charstring88" lucky_numbers;;
+- : int option = Some 88
+
+utop # StringMap.find_opt "charstring88" updated_lucky_numbers;;
+- : int option = Some 99
+#+END_SRC
+
+** Checking if a key is contained in a map
+
+#+BEGIN_SRC ocaml
+utop # StringMap.mem "paguzar" less_lucky_numbers;;
+- : bool = false
+#+END_SRC
+
+** Merging Maps
+
+#+BEGIN_SRC ocaml
+utop # StringMap.union;;
+- : (string -> 'a -> 'a -> 'a option) ->
+    'a StringMap.t -> 'a StringMap.t -> 'a StringMap.t
+= <fun>
+
+utop # let pick_fst key v1 _ = Some v1;;
+val pick_fst : 'a -> 'b -> 'c -> 'b option = <fun>
+
+utop #  let pick_snd key _ v2 = Some v2;;
+val pick_snd : 'a -> 'b -> 'c -> 'c option = <fun>
+
+utop # let drop _ _ _ = None;;
+val drop : 'a -> 'b -> 'c -> 'd option = <fun>
+
+utop # StringMap.(
+    union pick_fst lucky_numbers updated_lucky_numbers
+    |> find_opt "charstring88"
+  );;
+- : int option = Some 88
+
+utop # StringMap.(
+    union pick_snd lucky_numbers updated_lucky_numbers
+    |> find_opt "charstring88"
+  );;
+- : int option = Some 99
+
+utop # StringMap.(
+    union drop lucky_numbers updated_lucky_numbers
+    |> find_opt "charstring88"
+  );;
+- : int option = None
+#+END_SRC
+
+** Filtering a Map
+
+#+BEGIN_SRC ocaml
+utop # let even_numbers =
+  StringMap.filter
+    (fun _ number -> number mod 2 = 0)
+    lucky_numbers;;
+val even_numbers : int StringMap.t = <abstr>
+
+utop # printMap even_numbers ;;
+charstring88 --> 88
+leostera --> 2112
+- : unit = ()
+#+END_SRC
+
+** Map a Map
+
+#+BEGIN_SRC ocaml
+utop # StringMap.map;;
+- : ('a -> 'b) -> 'a StringMap.t -> 'b StringMap.t = <fun>
+
+utop # lucky_numbers ;;
+- : int StringMap.t = <abstr>
+
+utop # let lucky_strings = StringMap.map string_of_int lucky_numbers;;
+val lucky_strings : string StringMap.t = <abstr>
+
+utop # lucky_numbers |> StringMap.find "leostera" |> string_of_int;;
+- : string = "2112"
+
+utop # lucky_strings |> StringMap.find "leostera";;
+- : string = "2112"
+
+utop # let printStringMap m = StringMap.iter (fun key value -> Printf.printf "%s --> %s\n" key value) m ;;
+val printStringMap : string StringMap.t -> unit = <fun>
+
+utop # printStringMap lucky_strings ;;
+charstring88 --> 88
+divagnz --> 13
+leostera --> 2112
+- : unit = ()
+#+END_SRC
+
+** Maps with Custom Key Types
+
+#+BEGIN_SRC ocaml
+utop # module Istring : sig
+    type t
+    val compare : t -> t -> int
+  end = struct
+    type t = string
+    let compare a b = String.(compare (lowercase_ascii a) (lowercase_ascii b))
+  end;;
+module Istring : sig type t val compare : t -> t -> int end
+
+utop # module IstringMap = Map.Make(Istring);;
+module IstringMap :
+  sig
+    type key = Istring.t
+    type 'a t = 'a Map.Make(Istring).t
+    val empty : 'a t
+    val add : key -> 'a -> 'a t -> 'a t
+    val add_to_list : key -> 'a -> 'a list t -> 'a list t
+    val update : key -> ('a option -> 'a option) -> 'a t -> 'a t
+    val singleton : key -> 'a -> 'a t
+    val remove : key -> 'a t -> 'a t
+    val merge :
+      (key -> 'a option -> 'b option -> 'c option) -> 'a t -> 'b t -> 'c t
+    val union : (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
+    val cardinal : 'a t -> int
+    val bindings : 'a t -> (key * 'a) list
+    val min_binding : 'a t -> key * 'a
+    val min_binding_opt : 'a t -> (key * 'a) option
+    val max_binding : 'a t -> key * 'a
+    val max_binding_opt : 'a t -> (key * 'a) option
+    val choose : 'a t -> key * 'a
+    val choose_opt : 'a t -> (key * 'a) option
+    val find : key -> 'a t -> 'a
+    val find_opt : key -> 'a t -> 'a option
+    val find_first : (key -> bool) -> 'a t -> key * 'a
+    val find_first_opt : (key -> bool) -> 'a t -> (key * 'a) option
+    val find_last : (key -> bool) -> 'a t -> key * 'a
+    val find_last_opt : (key -> bool) -> 'a t -> (key * 'a) option
+    val iter : (key -> 'a -> unit) -> 'a t -> unit
+    val fold : (key -> 'a -> 'acc -> 'acc) -> 'a t -> 'acc -> 'acc
+    val map : ('a -> 'b) -> 'a t -> 'b t
+    val mapi : (key -> 'a -> 'b) -> 'a t -> 'b t
+    val filter : (key -> 'a -> bool) -> 'a t -> 'a t
+    val filter_map : (key -> 'a -> 'b option) -> 'a t -> 'b t
+    val partition : (key -> 'a -> bool) -> 'a t -> 'a t * 'a t
+    val split : key -> 'a t -> 'a t * 'a option * 'a t
+    val is_empty : 'a t -> bool
+    val mem : key -> 'a t -> bool
+    val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
+    val compare : ('a -> 'a -> int) -> 'a t -> 'a t -> int
+    val for_all : (key -> 'a -> bool) -> 'a t -> bool
+    val exists : (key -> 'a -> bool) -> 'a t -> bool
+    val to_list : 'a t -> (key * 'a) list
+    val of_list : (key * 'a) list -> 'a t
+    val to_seq : 'a t -> (key * 'a) Seq.t
+    val to_rev_seq : 'a t -> (key * 'a) Seq.t
+    val to_seq_from : key -> 'a t -> (key * 'a) Seq.t
+    val add_seq : (key * 'a) Seq.t -> 'a t -> 'a t
+    val of_seq : (key * 'a) Seq.t -> 'a t
+  end
+#+END_SRC
