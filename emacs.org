@@ -2406,3 +2406,156 @@ the cua-rectangle-mark-mode command.
 There is also the standard command rectangle-mark-mode.
 
 Use C-S-SPC to toggle the global mark on and off.
+* 13. Registers
+
+** Introduction
+
+You can view r register contents using M-x view-register RET r.
+
+To change the length of the delay of the preview window to list the existing registers, customize register-preview-delay.
+
+Bookmarks record files and positions in them, so you can return to those positions when you look at the file again.
+
+** Saving positions in registers
+
+C-x r SPC r
+Record the position of point and the current buffer in register r (point-to-register).
+
+C-x r j r
+Jump to the position and buffer saved in register r (jump-to-register).
+
+** Saving Text in Registers
+
+C-x r s r
+Copy region into register r (copy-to-register).
+
+Note: C-u C-x r s r, the same command with a prefix argument, copies
+the text into register r and deletes the text from the buffer as well.
+
+C-x r i r
+Insert text from register r (insert-register).
+
+M-x append-to-register RET r
+Append region to text in register r.
+
+M-x prepend-to-register RET r
+Prepend region to text in register r.
+
+When you are collecting text using append-to-register and prepend-to-register, you may want to separate individual collected pieces using a separator. 
+
+In that case, configure a register-separator and store the separator text in to that register. 
+
+For example, to get double newlines as text separator during the collection process, you can use the following setting.
+
+#+BEGIN_SRC elisp
+(setq register-separator ?+)
+(set-register register-separator "\n\n")
+#+END_SRC
+
+** Saving Rectangles in Registers
+
+C-x r r r
+Copy the region-rectangle into register r (copy-rectangle-to-register). With prefix argument, delete it as well.
+
+C-x r i r
+Insert the rectangle stored in register r (if it contains a rectangle) (insert-register).
+
+** Saving Window Configurations in Registers
+
+C-x r w r
+Save the state of the selected frame’s windows in register r (window-configuration-to-register).
+
+C-x r f r
+Save the state of all frames, including all their windows, in register r (frameset-to-register).
+
+Use C-x r j r to restore a window or frame configuration.
+
+If you wish to delete these frames instead, use C-u C-x r j r.
+
+** Keeping Numbers in Registers
+
+C-u number C-x r n r
+Store number into register r (number-to-register).
+
+C-u number C-x r + r
+If r contains a number, increment the number in that register by number. 
+
+Note that command C-x r + (increment-register) behaves differently if r contains text. See Text Registers.
+
+C-x r i r
+Insert the number from register r into the buffer.
+
+Note:
+C-x r + with no numeric argument increments the register value by 1. 
+C-x r n with no numeric argument stores zero in the register.
+
+** Keeping File Names in Registers
+
+To put a file name into register r, use:
+
+#+BEGIN_SRC elisp
+(set-register r '(file . name))
+#+END_SRC
+
+For example:
+
+#+BEGIN_SRC elisp
+(set-register ?z '(file . "/gd/gnu/emacs/19.0/src/ChangeLog"))
+#+END_SRC
+
+puts the file name shown in register ‘z’.
+
+To visit the file whose name is in register r, type C-x r j r. 
+
+** Keyboard Macro Registers
+
+C-x C-k x r (kmacro-to-register) stores the last keyboard macro in register r.
+
+To execute the keyboard macro in register r, type C-x r j r.
+
+** Bookmarks
+
+C-x r m RET
+Set the bookmark for the visited file, at point.
+
+C-x r m bookmark RET
+Set the bookmark named bookmark at point (bookmark-set).
+
+C-x r M bookmark RET
+Like C-x r m, but don’t overwrite an existing bookmark.
+
+C-x r b bookmark RET
+Jump to the bookmark named bookmark (bookmark-jump).
+
+C-x r l
+List all bookmarks (list-bookmarks).
+
+M-x bookmark-save
+Save all the current bookmark values in the default bookmark file.
+
+If you set the variable bookmark-save-flag to 1, each command that sets a bookmark will also save your bookmarks.
+
+If you set this variable to nil, Emacs only saves bookmarks if you explicitly use M-x bookmark-save.
+
+The variable bookmark-default-file specifies the file in which to save bookmarks by default.
+
+If you set the variable bookmark-use-annotations to t, setting a bookmark will query for an annotation.
+
+Bookmark position values are saved with surrounding context, so that bookmark-jump can find the proper position even if the file is modified slightly. 
+
+The variable bookmark-search-size says how many characters of context to record on each side of the bookmark’s position.
+
+M-x bookmark-load RET filename RET
+Load a file named filename that contains a list of bookmark values. You can use this command, as well as bookmark-write, to work with other files of bookmark values in addition to your default bookmark file.
+
+M-x bookmark-write RET filename RET
+Save all the current bookmark values in the file filename.
+
+M-x bookmark-delete RET bookmark RET
+Delete the bookmark named bookmark.
+
+M-x bookmark-insert-location RET bookmark RET
+Insert in the buffer the name of the file that bookmark bookmark points to.
+
+M-x bookmark-insert RET bookmark RET
+Insert in the buffer the contents of the file that bookmark bookmark points to.
