@@ -5283,3 +5283,300 @@ module IstringMap :
     val of_seq : (key * 'a) Seq.t -> 'a t
   end
 #+END_SRC
+* 18. Sets and Hash Tables
+
+** Introduction
+
+#+BEGIN_SRC ocaml
+utop # module StringSet = Set.Make(String) ;;
+module StringSet :
+  sig
+    type elt = string
+    type t = Set.Make(String).t
+    val empty : t
+    val add : elt -> t -> t
+    val singleton : elt -> t
+    val remove : elt -> t -> t
+    val union : t -> t -> t
+    val inter : t -> t -> t
+    val disjoint : t -> t -> bool
+    val diff : t -> t -> t
+    val cardinal : t -> int
+    val elements : t -> elt list
+    val min_elt : t -> elt
+    val min_elt_opt : t -> elt option
+    val max_elt : t -> elt
+    val max_elt_opt : t -> elt option
+    val choose : t -> elt
+    val choose_opt : t -> elt option
+    val find : elt -> t -> elt
+    val find_opt : elt -> t -> elt option
+    val find_first : (elt -> bool) -> t -> elt
+    val find_first_opt : (elt -> bool) -> t -> elt option
+    val find_last : (elt -> bool) -> t -> elt
+    val find_last_opt : (elt -> bool) -> t -> elt option
+    val iter : (elt -> unit) -> t -> unit
+    val fold : (elt -> 'acc -> 'acc) -> t -> 'acc -> 'acc
+    val map : (elt -> elt) -> t -> t
+    val filter : (elt -> bool) -> t -> t
+    val filter_map : (elt -> elt option) -> t -> t
+    val partition : (elt -> bool) -> t -> t * t
+    val split : elt -> t -> t * bool * t
+    val is_empty : t -> bool
+    val mem : elt -> t -> bool
+    val equal : t -> t -> bool
+    val compare : t -> t -> int
+    val subset : t -> t -> bool
+    val for_all : (elt -> bool) -> t -> bool
+    val exists : (elt -> bool) -> t -> bool
+    val to_list : t -> elt list
+    val of_list : elt list -> t
+    val to_seq_from : elt -> t -> elt Seq.t
+    val to_seq : t -> elt Seq.t
+    val to_rev_seq : t -> elt Seq.t
+    val add_seq : elt Seq.t -> t -> t
+    val of_seq : elt Seq.t -> t
+  end
+#+END_SRC
+
+** Creating a Set
+
+#+BEGIN_SRC ocaml
+utop # StringSet.empty ;;
+- : StringSet.t = <abstr>
+
+utop # StringSet.empty |> StringSet.to_list;; 
+- : string list = []
+
+utop # StringSet.singleton "hello";;
+- : StringSet.t = <abstr>
+
+utop #  StringSet.(singleton "hello" |> to_list);;
+- : string list = ["hello"]
+
+utop #  StringSet.of_list ["hello"; "hi"];;
+- : StringSet.t = <abstr>
+
+utop # StringSet.(of_list ["hello"; "hi"] |> to_list);;
+- : string list = ["hello"; "hi"]
+#+END_SRC
+
+** Working with Sets
+
+#+BEGIN_SRC ocaml
+utop # let first_set = ["hello"; "hi"] |> StringSet.of_list;;
+val first_set : StringSet.t = <abstr>
+
+utop # let second_set = ["good morning"; "hi"] |> StringSet.of_list;;
+val second_set : StringSet.t = <abstr>
+
+utop # StringSet.(first_set |> add "good morning" |> to_list);;
+- : string list = ["good morning"; "hello"; "hi"]
+
+utop # StringSet.(first_set |> remove "hello" |> to_list);;
+- : string list = ["hi"]
+
+utop # StringSet.(union first_set second_set |> to_list);;
+- : string list = ["good morning"; "hello"; "hi"]
+
+utop # StringSet.(inter first_set second_set |> to_list);;
+- : string list = ["hi"]
+
+utop # StringSet.(diff first_set second_set |> to_list);;
+- : string list = ["hello"]
+
+utop # ["good morning"; "hello"; "hi"]
+  |> StringSet.of_list
+  |> StringSet.filter (fun str -> String.length str <= 5)
+  |> StringSet.to_list;;
+- : string list = ["hello"; "hi"]
+
+utop # ["good morning"; "hello"; "hi"]
+  |> StringSet.of_list
+  |> StringSet.mem "hello";;
+- : bool = true
+#+END_SRC
+
+** Sets with Custom Comparators
+
+#+BEGIN_SRC ocaml
+module CISS = Set.Make(struct
+  type t = string
+  let compare a b = compare (String.lowercase_ascii a) (String.lowercase_ascii b)
+end);;
+module CISS :
+  sig
+    type elt = string
+    type t
+    val empty : t
+    val add : elt -> t -> t
+    val singleton : elt -> t
+    val remove : elt -> t -> t
+    val union : t -> t -> t
+    val inter : t -> t -> t
+    val disjoint : t -> t -> bool
+    val diff : t -> t -> t
+    val cardinal : t -> int
+    val elements : t -> elt list
+    val min_elt : t -> elt
+    val min_elt_opt : t -> elt option
+    val max_elt : t -> elt
+    val max_elt_opt : t -> elt option
+    val choose : t -> elt
+    val choose_opt : t -> elt option
+    val find : elt -> t -> elt
+    val find_opt : elt -> t -> elt option
+    val find_first : (elt -> bool) -> t -> elt
+    val find_first_opt : (elt -> bool) -> t -> elt option
+    val find_last : (elt -> bool) -> t -> elt
+    val find_last_opt : (elt -> bool) -> t -> elt option
+    val iter : (elt -> unit) -> t -> unit
+    val fold : (elt -> 'acc -> 'acc) -> t -> 'acc -> 'acc
+    val map : (elt -> elt) -> t -> t
+    val filter : (elt -> bool) -> t -> t
+    val filter_map : (elt -> elt option) -> t -> t
+    val partition : (elt -> bool) -> t -> t * t
+    val split : elt -> t -> t * bool * t
+    val is_empty : t -> bool
+    val mem : elt -> t -> bool
+    val equal : t -> t -> bool
+    val compare : t -> t -> int
+    val subset : t -> t -> bool
+    val for_all : (elt -> bool) -> t -> bool
+    val exists : (elt -> bool) -> t -> bool
+    val to_list : t -> elt list
+    val of_list : elt list -> t
+    val to_seq_from : elt -> t -> elt Seq.t
+    val to_seq : t -> elt Seq.t
+    val to_rev_seq : t -> elt Seq.t
+    val add_seq : elt Seq.t -> t -> t
+    val of_seq : elt Seq.t -> t
+  end
+
+utop # CISS.singleton "hello" |> CISS.add "HELLO" |> CISS.to_list;;
+- : string list = ["hello"]
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+utop # type color = Red | Green | Blue;;
+type color = Red | Green | Blue
+
+utop #  module SC = Set.Make(struct
+  type t = color
+  let compare a b =
+    match a, b with
+    | (Red, Red) -> 0
+    | (Red, Green) -> 1
+    | (Red, Blue) -> 1
+    | (Green, Red) -> -1
+    | (Green, Green) -> 0
+    | (Green, Blue) -> 1
+    | (Blue, Red) -> -1
+    | (Blue, Green) -> -1
+    | (Blue, Blue) -> 0
+end);;
+module SC :
+  sig
+    type elt = color
+    type t
+    val empty : t
+    val add : elt -> t -> t
+    val singleton : elt -> t
+    val remove : elt -> t -> t
+    val union : t -> t -> t
+    val inter : t -> t -> t
+    val disjoint : t -> t -> bool
+    val diff : t -> t -> t
+    val cardinal : t -> int
+    val elements : t -> elt list
+    val min_elt : t -> elt
+    val min_elt_opt : t -> elt option
+    val max_elt : t -> elt
+    val max_elt_opt : t -> elt option
+    val choose : t -> elt
+    val choose_opt : t -> elt option
+    val find : elt -> t -> elt
+    val find_opt : elt -> t -> elt option
+    val find_first : (elt -> bool) -> t -> elt
+    val find_first_opt : (elt -> bool) -> t -> elt option
+    val find_last : (elt -> bool) -> t -> elt
+    val find_last_opt : (elt -> bool) -> t -> elt option
+    val iter : (elt -> unit) -> t -> unit
+    val fold : (elt -> 'acc -> 'acc) -> t -> 'acc -> 'acc
+    val map : (elt -> elt) -> t -> t
+    val filter : (elt -> bool) -> t -> t
+    val filter_map : (elt -> elt option) -> t -> t
+    val partition : (elt -> bool) -> t -> t * t
+    val split : elt -> t -> t * bool * t
+    val is_empty : t -> bool
+    val mem : elt -> t -> bool
+    val equal : t -> t -> bool
+    val compare : t -> t -> int
+    val subset : t -> t -> bool
+    val for_all : (elt -> bool) -> t -> bool
+    val exists : (elt -> bool) -> t -> bool
+    val to_list : t -> elt list
+    val of_list : elt list -> t
+    val to_seq_from : elt -> t -> elt Seq.t
+    val to_seq : t -> elt Seq.t
+    val to_rev_seq : t -> elt Seq.t
+    val add_seq : elt Seq.t -> t -> t
+    val of_seq : elt Seq.t -> t
+  end
+#+END_SRC
+
+Hash Tables
+
+Source: https://ocaml.org/docs/hash-tables
+
+#+BEGIN_SRC ocaml
+utop # let my_hash = Hashtbl.create 123456;;
+val my_hash : ('_weak1, '_weak2) Hashtbl.t = <abstr>
+
+utop # my_hash ;;
+- : ('_weak1, '_weak2) Hashtbl.t = <abstr>
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+utop # Hashtbl.add my_hash "h" "hello";
+  Hashtbl.add my_hash "h" "hi";
+  Hashtbl.add my_hash "h" "hug";
+  Hashtbl.add my_hash "h" "hard";
+  Hashtbl.add my_hash "w" "wimp";
+  Hashtbl.add my_hash "w" "world";
+  Hashtbl.add my_hash "w" "wine";;
+- : unit = ()
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+utop # Hashtbl.find my_hash "h";;
+- : string = "hard"
+
+utop # Hashtbl.find_all my_hash "h";;
+- : string list = ["hard"; "hug"; "hi"; "hello"]
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+utop #  Hashtbl.remove my_hash "h";;
+- : unit = ()
+
+utop # Hashtbl.find my_hash "h";;
+- : string = "hug"
+
+utop # Hashtbl.find_all my_hash "h";;
+- : string list = ["hug"; "hi"; "hello"]
+#+END_SRC
+
+#+BEGIN_SRC ocaml
+utop # Hashtbl.replace my_hash "t" "try";
+  Hashtbl.replace my_hash "t" "test";
+  Hashtbl.find_all my_hash "t";;
+- : string list = ["test"]
+
+utop #  Hashtbl.remove my_hash "t";
+  Hashtbl.find my_hash "t";;
+Exception: Not_found.
+
+utop # Hashtbl.mem my_hash "h";;
+- : bool = true
+#+END_SRC
