@@ -5525,7 +5525,7 @@ module SC :
   end
 #+END_SRC
 
-Hash Tables
+** Hash Tables
 
 Source: https://ocaml.org/docs/hash-tables
 
